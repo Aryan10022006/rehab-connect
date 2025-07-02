@@ -41,6 +41,12 @@ const HomePage = () => {
   // Sort by distance (default)
   filteredClinics = filteredClinics.sort((a, b) => getDistanceNumber(a.distance) - getDistanceNumber(b.distance));
 
+  const clinicsDescending = [...filteredClinics].sort((a, b) => getDistanceNumber(b.distance) - getDistanceNumber(a.distance));
+
+  const farthestClinics = clinicsDescending.slice(0, 2);
+
+  const blurredClinics = clinicsDescending.slice(2); //for future use once we do the paywall
+
   const handleClearFilters = () => {
     setSearch("");
     setDistance("");
@@ -76,7 +82,7 @@ const HomePage = () => {
             {filteredClinics.length === 0 && (
               <div className="text-center text-slate-400 py-8">No clinics found matching your criteria.</div>
             )}
-            {filteredClinics.map((clinic) => (
+            {farthestClinics.map((clinic) => (
               <ClinicCard
                 key={clinic.id}
                 clinic={clinic}
@@ -84,6 +90,16 @@ const HomePage = () => {
                 onClick={() => setSelectedClinicId(clinic.id)}
                 locked={false}
               />
+            ))}
+            {[...Array(4)].map((_, idx) => (
+              <div key={`blurred-placeholder-${idx}`} style={{ filter: 'blur(4px)', pointerEvents: 'none' }}>
+                <ClinicCard
+                  clinic={farthestClinics[idx % 2]}
+                  selected={false}
+                  onClick={() => {}}
+                  locked={true}
+                />
+              </div>
             ))}
           </div>
         </div>
