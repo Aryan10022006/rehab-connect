@@ -1,8 +1,8 @@
-import React, { useRef, useEffect } from "react";
+import React, { useRef, useEffect, useState } from "react";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { FaCheckCircle, FaPhone, FaMapMarkerAlt, FaGlobe, FaEnvelope, FaUserMd } from "react-icons/fa";
+import { FaCheckCircle, FaPhone, FaMapMarkerAlt, FaGlobe, FaEnvelope, FaUserMd, FaCrosshairs } from "react-icons/fa";
 
 // Fix default icon issue in Leaflet
 import iconUrl from "leaflet/dist/images/marker-icon.png";
@@ -24,6 +24,33 @@ const verifiedIcon = new L.Icon({
   popupAnchor: [0, -32],
 });
 
+const userIcon = new L.Icon({
+  iconUrl: "https://maps.google.com/mapfiles/ms/icons/blue-dot.png",
+  iconSize: [32, 32],
+  iconAnchor: [16, 32],
+  popupAnchor: [0, -32],
+});
+
+// Google Maps-style marker icons
+const redIcon = new L.Icon({
+  iconUrl: "https://maps.google.com/mapfiles/ms/icons/red-dot.png",
+  iconSize: [32, 32],
+  iconAnchor: [16, 32],
+  popupAnchor: [0, -32],
+});
+const greenIcon = new L.Icon({
+  iconUrl: "https://maps.google.com/mapfiles/ms/icons/green-dot.png",
+  iconSize: [32, 32],
+  iconAnchor: [16, 32],
+  popupAnchor: [0, -32],
+});
+const blueIcon = new L.Icon({
+  iconUrl: "https://maps.google.com/mapfiles/ms/icons/blue-dot.png",
+  iconSize: [32, 32],
+  iconAnchor: [16, 32],
+  popupAnchor: [0, -32],
+});
+
 function MapSync({ clinics, selectedClinicId }) {
   const map = useMap();
   useEffect(() => {
@@ -35,10 +62,73 @@ function MapSync({ clinics, selectedClinicId }) {
   return null;
 }
 
-const ClinicMap = ({ clinics, selectedClinicId, onMarkerClick }) => {
+const ClinicMap = ({ clinics, selectedClinicId, onMarkerClick, blurredClinicIds = [] }) => {
   const initial = clinics[0] || { lat: 20.5937, lng: 78.9629 };
+  const [userLocation, setUserLocation] = useState(null);
+  const [locating, setLocating] = useState(false);
+  const mapRef = useRef();
+
+  // Locate user and center map
+  const handleLocate = () => {
+    if (!navigator.geolocation) return;
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        if (mapRef.current) {
+          mapRef.current.setView([pos.coords.latitude, pos.coords.longitude], 14, { animate: true });
+        }
+        setLocating(false);
+      },
+      () => setLocating(false),
+      { enableHighAccuracy: true }
+    );
+  };
+
+  // Get map instance
+  function SetMapRef() {
+    const map = useMap();
+    useEffect(() => {
+      mapRef.current = map;
+    }, [map]);
+    return null;
+  }
+
+  useEffect(() => {
+    if (!mapRef.current) return;
+    mapRef.current.eachLayer((layer) => {
+      if (layer instanceof L.Marker) {
+        mapRef.current.removeLayer(layer);
+      }
+    });
+    clinics.forEach((clinic) => {
+      if (clinic.lat && clinic.lng) {
+        const isBlurred = blurredClinicIds.includes(clinic.id);
+        const markerIcon = clinic.verified ? greenIcon : redIcon;
+        const marker = L.marker([clinic.lat, clinic.lng], { icon: markerIcon })
+          .addTo(mapRef.current)
+          .on("click", () => {
+            if (isBlurred) {
+              marker.bindPopup(`<div style='filter: blur(3px); pointer-events: none; user-select: none;'>${clinic.name}<br/>${clinic.address || ''}</div><div style='filter:none; color:#888; font-size:13px; margin-top:8px;'>Unlock premium to view details</div>`).openPopup();
+            } else {
+              onMarkerClick(clinic.id);
+            }
+          });
+        if (clinic.id === selectedClinicId) {
+          marker.openPopup();
+        }
+      }
+    });
+    // Add user location marker if set
+    if (userLocation) {
+      L.marker([userLocation.lat, userLocation.lng], { icon: blueIcon })
+        .addTo(mapRef.current)
+        .bindPopup("You are here");
+    }
+  }, [clinics, selectedClinicId, onMarkerClick, blurredClinicIds, userLocation]);
+
   return (
-    <div className="w-full h-full rounded-lg overflow-hidden border shadow-md">
+    <div className="w-full h-full rounded-lg overflow-hidden border shadow-md relative">
       <MapContainer
         center={[initial.lat, initial.lng]}
         zoom={12}
@@ -46,6 +136,7 @@ const ClinicMap = ({ clinics, selectedClinicId, onMarkerClick }) => {
         className="w-full h-full min-h-[300px] md:min-h-[400px]"
         style={{ height: "100%", width: "100%" }}
       >
+        <SetMapRef />
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -88,8 +179,23 @@ const ClinicMap = ({ clinics, selectedClinicId, onMarkerClick }) => {
         ))}
         <MapSync clinics={clinics} selectedClinicId={selectedClinicId} />
       </MapContainer>
+      <button
+        onClick={handleLocate}
+        className="absolute top-4 right-4 z-[1000] bg-white border border-slate-200 shadow px-3 py-2 rounded-full flex items-center gap-2 hover:bg-blue-50 transition"
+        title="Locate Me"
+        disabled={locating}
+      >
+        <FaCrosshairs className="text-blue-600" />
+        {locating ? "Locating..." : "My Location"}
+      </button>
     </div>
   );
 };
+
+// Add this CSS to your main CSS file (e.g., App.css or index.css):
+// .blurred-marker {
+//   filter: blur(2px) opacity(0.5) !important;
+//   pointer-events: none;
+// }
 
 export default ClinicMap; 

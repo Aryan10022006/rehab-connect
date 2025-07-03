@@ -36,3 +36,8 @@
     transform: rotate(360deg);
   }
 }
+
+.blurred-marker {
+  filter: blur(2px) opacity(0.5) !important;
+  pointer-events: none;
+}

@@ -12,7 +12,6 @@
     "pincode": "600020",
     "services": ["Physiotherapy", "Prosthetics", "Orthotics"],
     "verified": true,
-    "distance": "1.2 KM",
     "surgeon": "Dr. S. Kumar",
     "image": "/clinic1.jpg",
     "rating": 4.5
@@ -30,7 +29,6 @@
     "pincode": "400020",
     "services": ["Physiotherapy", "Sports Rehab"],
     "verified": true,
-    "distance": "2.5 KM",
     "surgeon": "Dr. A. Mehta",
     "image": "/clinic2.jpg",
     "rating": 4.2
@@ -64,7 +62,6 @@
     "pincode": "110001",
     "services": ["Physiotherapy", "Neuro Rehab", "Pain Management"],
     "verified": false,
-    "distance": "4.8 KM",
     "surgeon": "Dr. P. Singh",
     "image": "/clinic4.jpg",
     "rating": 3.8
@@ -82,7 +79,6 @@
     "pincode": "500034",
     "services": ["Orthotics", "Prosthetics", "Sports Rehab"],
     "verified": true,
-    "distance": "2.1 KM",
     "surgeon": "Dr. M. Rao",
     "image": "/clinic1.jpg",
     "rating": null
@@ -100,7 +96,6 @@
     "pincode": "411005",
     "services": ["Physiotherapy", "Pain Management"],
     "verified": false,
-    "distance": "3.7 KM",
     "surgeon": "Dr. S. Patil",
     "image": "/clinic2.jpg",
     "rating": 4.0

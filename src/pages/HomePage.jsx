@@ -1,51 +1,148 @@
-import React, { useState, useMemo } from "react";
-import clinicsData from "../data/clinics.json";
+import React, { useState, useMemo, useEffect } from "react";
+import { getDistance } from "geolib";
+import Fuse from "fuse.js";
 import ClinicCard from "../components/ClinicCard";
 import ClinicMap from "../components/ClinicMap";
 import Filters from "../components/Filters";
+import { useMediaQuery } from 'react-responsive';
 
 function getUnique(arr, key) {
   return [...new Set(arr.map((item) => item[key]).filter(Boolean))];
 }
 
-const getDistanceNumber = (distance) => {
-  if (!distance) return Infinity;
-  const num = parseFloat(distance);
-  return isNaN(num) ? Infinity : num;
+const fuseOptions = {
+  keys: ["name", "address", "location", "pincode"],
+  threshold: 0.3,
+  includeScore: true,
 };
 
+function getUserEmail() {
+  const user = JSON.parse(localStorage.getItem("user"));
+  if (user && user.credential) {
+    try {
+      const base64Url = user.credential.split('.')[1];
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+      }).join(''));
+      const payload = JSON.parse(jsonPayload);
+      return payload.email;
+    } catch (e) { return null; }
+  }
+  return null;
+}
+
 const HomePage = () => {
-  const [selectedClinicId, setSelectedClinicId] = useState(clinicsData[0]?.id || null);
+  const [clinicsData, setClinicsData] = useState([]);
+  const [selectedClinicId, setSelectedClinicId] = useState(null);
   const [search, setSearch] = useState("");
   const [distance, setDistance] = useState("");
   const [surgeon, setSurgeon] = useState("");
   const [service, setService] = useState("");
+  const [userLocation, setUserLocation] = useState(null);
+  const [locationError, setLocationError] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  // Prepare filter options
-  const surgeons = useMemo(() => getUnique(clinicsData, "surgeon"), []);
-  const services = useMemo(() => Array.from(new Set(clinicsData.flatMap(c => c.services || []))), []);
-  const distances = useMemo(() => getUnique(clinicsData, "distance"), []);
+  // Get user email for browsing history
+  const userEmail = getUserEmail();
 
-  // Filtering logic
-  let filteredClinics = clinicsData.filter((clinic) => {
-    const matchesSearch =
-      clinic.name.toLowerCase().includes(search.toLowerCase()) ||
-      clinic.location.toLowerCase().includes(search.toLowerCase()) ||
-      clinic.address.toLowerCase().includes(search.toLowerCase());
-    const matchesDistance = !distance || clinic.distance === distance;
-    const matchesSurgeon = !surgeon || clinic.surgeon === surgeon;
-    const matchesService = !service || (clinic.services && clinic.services.includes(service));
-    return matchesSearch && matchesDistance && matchesSurgeon && matchesService;
+  // Fetch clinics from backend
+  useEffect(() => {
+    setLoading(true);
+    fetch("http://localhost:5000/api/clinics")
+      .then(res => res.json())
+      .then(data => {
+        setClinicsData(data);
+        setSelectedClinicId(data[0]?.id || null);
+        setLoading(false);
+      })
+      .catch(() => {
+        setError("Failed to load clinics from backend.");
+        setLoading(false);
+      });
+  }, []);
+
+  // Get user location on mount
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+        (err) => setLocationError("Location access denied. Distance will not be personalized."),
+        { enableHighAccuracy: true }
+      );
+    } else {
+      setLocationError("Geolocation not supported.");
+    }
+  }, []);
+
+  // Fuzzy search
+  const fuse = useMemo(() => new Fuse(clinicsData, fuseOptions), [clinicsData]);
+  let filteredClinics = clinicsData;
+  if (search.trim()) {
+    const fuseResults = fuse.search(search.trim());
+    filteredClinics = fuseResults.map(r => r.item);
+  }
+
+  // Calculate distance for each clinic
+  const clinicsWithDistance = filteredClinics.map((clinic) => {
+    let dist = null;
+    if (userLocation) {
+      dist = getDistance(
+        { latitude: userLocation.lat, longitude: userLocation.lng },
+        { latitude: clinic.lat, longitude: clinic.lng }
+      ) / 1000;
+    }
+    return { ...clinic, calculatedDistance: dist };
   });
 
-  // Sort by distance (default)
-  filteredClinics = filteredClinics.sort((a, b) => getDistanceNumber(a.distance) - getDistanceNumber(b.distance));
+  // Filter by pincode if entered in search
+  let clinicsToShow = clinicsWithDistance;
+  const pincodeMatch = search.trim().match(/\b\d{6}\b/);
+  if (pincodeMatch) {
+    clinicsToShow = clinicsToShow.filter(c => c.pincode === pincodeMatch[0]);
+  } else if (userLocation) {
+    // If no pincode, filter by distance <= 20km
+    clinicsToShow = clinicsToShow.filter(
+      (c) => c.calculatedDistance !== null && c.calculatedDistance <= 20
+    );
+  }
 
-  const clinicsDescending = [...filteredClinics].sort((a, b) => getDistanceNumber(b.distance) - getDistanceNumber(a.distance));
+  // Dynamic filter options based on filtered clinics
+  const surgeons = useMemo(() => getUnique(clinicsToShow, "surgeon"), [clinicsToShow]);
+  const services = useMemo(() => Array.from(new Set(clinicsToShow.flatMap(c => c.services || []))), [clinicsToShow]);
+  // Distance filter options (in km, max 20)
+  const distanceOptions = ["1", "2", "5", "10", "20"];
 
-  const farthestClinics = clinicsDescending.slice(0, 2);
+  // Filter by surgeon and service
+  clinicsToShow = clinicsToShow.filter((clinic) => {
+    const matchesSurgeon = !surgeon || clinic.surgeon === surgeon;
+    const matchesService = !service || (clinic.services && clinic.services.includes(service));
+    return matchesSurgeon && matchesService;
+  });
 
-  const blurredClinics = clinicsDescending.slice(2); //for future use once we do the paywall
+  // Sort by calculated distance (ascending)
+  clinicsToShow = clinicsToShow.sort((a, b) => {
+    if (a.calculatedDistance == null) return 1;
+    if (b.calculatedDistance == null) return -1;
+    return a.calculatedDistance - b.calculatedDistance;
+  });
+
+  // Blur the first 3 results for premium
+  const blurredClinics = clinicsToShow.slice(0, 3);
+  const visibleClinics = clinicsToShow.slice(3);
+  const blurredClinicIds = blurredClinics.map(c => c.id);
+
+  // Track browsing history
+  useEffect(() => {
+    if (userEmail && selectedClinicId) {
+      const historyKey = `history_${userEmail}`;
+      const prev = JSON.parse(localStorage.getItem(historyKey) || "[]");
+      if (!prev.includes(selectedClinicId)) {
+        localStorage.setItem(historyKey, JSON.stringify([selectedClinicId, ...prev].slice(0, 10)));
+      }
+    }
+  }, [selectedClinicId, userEmail]);
 
   const handleClearFilters = () => {
     setSearch("");
@@ -53,6 +150,9 @@ const HomePage = () => {
     setSurgeon("");
     setService("");
   };
+
+  const isMobile = useMediaQuery({ maxWidth: 767 });
+  const [showDropdownMap, setShowDropdownMap] = useState(false);
 
   return (
     <main className="flex flex-col h-screen min-h-0 bg-slate-50 overflow-hidden">
@@ -71,46 +171,67 @@ const HomePage = () => {
               setService={setService}
               surgeons={surgeons}
               services={services}
-              distances={distances}
+              distances={distanceOptions}
               onClear={handleClearFilters}
             />
           </div>
           <div className="flex-1 overflow-y-auto px-2 pb-4 min-h-0">
+            {locationError && (
+              <div className="text-xs text-red-500 mb-2">{locationError}</div>
+            )}
             <div className="text-xs text-slate-500 mb-2 font-medium">
-              {filteredClinics.length} Results
+              {clinicsToShow.length} Results
             </div>
-            {filteredClinics.length === 0 && (
+            {clinicsToShow.length === 0 && (
               <div className="text-center text-slate-400 py-8">No clinics found matching your criteria.</div>
             )}
-            {farthestClinics.map((clinic) => (
-              <ClinicCard
-                key={clinic.id}
-                clinic={clinic}
-                selected={clinic.id === selectedClinicId}
-                onClick={() => setSelectedClinicId(clinic.id)}
-                locked={false}
-              />
-            ))}
-            {[...Array(4)].map((_, idx) => (
-              <div key={`blurred-placeholder-${idx}`} style={{ filter: 'blur(4px)', pointerEvents: 'none' }}>
+            {blurredClinics.map((clinic) => (
+              <div key={clinic.id} style={{ filter: 'blur(4px)', pointerEvents: 'none' }}>
                 <ClinicCard
-                  clinic={farthestClinics[idx % 2]}
+                  clinic={{ ...clinic, distance: clinic.calculatedDistance != null ? `${clinic.calculatedDistance.toFixed(2)} KM` : "-" }}
                   selected={false}
                   onClick={() => {}}
                   locked={true}
                 />
               </div>
             ))}
+            {visibleClinics.map((clinic) => (
+              <div key={clinic.id}>
+                <ClinicCard
+                  clinic={{ ...clinic, distance: clinic.calculatedDistance != null ? `${clinic.calculatedDistance.toFixed(2)} KM` : "-" }}
+                  selected={clinic.id === selectedClinicId}
+                  onClick={() => {
+                    setSelectedClinicId(clinic.id);
+                    if (isMobile) setShowDropdownMap(true);
+                  }}
+                  locked={false}
+                />
+                {/* Dropdown map for mobile */}
+                {isMobile && showDropdownMap && clinic.id === selectedClinicId && (
+                  <div className="transition-all duration-300 overflow-hidden rounded-lg border shadow mt-2" style={{ maxHeight: '400px' }}>
+                    <ClinicMap
+                      clinics={[clinic]}
+                      selectedClinicId={clinic.id}
+                      onMarkerClick={() => {}}
+                      blurredClinicIds={[]}
+                    />
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
         </div>
         {/* Right: Map */}
-        <div className="flex-1 w-full h-[300px] md:h-auto md:min-h-[600px] md:max-h-[calc(100vh-120px)] z-0 min-h-0">
-          <ClinicMap
-            clinics={filteredClinics}
-            selectedClinicId={selectedClinicId}
-            onMarkerClick={setSelectedClinicId}
-          />
-        </div>
+        {!isMobile && (
+          <div className="flex-1 w-full h-[300px] md:h-auto md:min-h-[600px] md:max-h-[calc(100vh-120px)] z-0 min-h-0">
+            <ClinicMap
+              clinics={clinicsToShow}
+              selectedClinicId={selectedClinicId}
+              onMarkerClick={setSelectedClinicId}
+              blurredClinicIds={blurredClinicIds}
+            />
+          </div>
+        )}
       </div>
     </main>
   );
