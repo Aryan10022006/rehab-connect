@@ -5,6 +5,7 @@ import ClinicCard from "../components/ClinicCard";
 import ClinicMap from "../components/ClinicMap";
 import Filters from "../components/Filters";
 import { useMediaQuery } from 'react-responsive';
+import { API_BASE_URL } from '../utils/api';
 
 function getUnique(arr, key) {
   return [...new Set(arr.map((item) => item[key]).filter(Boolean))];
@@ -50,7 +51,7 @@ const HomePage = () => {
   // Fetch clinics from backend
   useEffect(() => {
     setLoading(true);
-    fetch("http://localhost:5000/api/clinics")
+    fetch(`${API_BASE_URL}/clinics`)
       .then(res => res.json())
       .then(data => {
         setClinicsData(data);

@@ -1,6 +1,7 @@
 import React, { useRef, useState, useEffect } from "react";
+import { API_BASE_URL } from '../utils/api';
 
-const API_URL = "http://localhost:5000/api";
+const API_URL = API_BASE_URL;
 
 const TABS = ["Statistics", "Manage Clinics", "Bulk Upload"];
 
