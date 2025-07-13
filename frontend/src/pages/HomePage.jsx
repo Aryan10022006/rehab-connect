@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { getDistance } from "geolib";
 import Fuse from "fuse.js";
 import ClinicCard from "../components/ClinicCard";
@@ -11,6 +11,7 @@ import { useAuth } from '../context/AuthContext';
 function getUnique(arr, key) {
   return [...new Set(arr.map((item) => item[key]).filter(Boolean))];
 }
+
 
 const fuseOptions = {
   keys: ["name", "address", "location", "pincode"],
@@ -27,6 +28,7 @@ const HomePage = () => {
   const [surgeon, setSurgeon] = useState("");
   const [service, setService] = useState("");
   const [userLocation, setUserLocation] = useState(null);
+  const [mapCenter, setMapCenter] = useState(null);
   const [locationError, setLocationError] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -38,7 +40,7 @@ const HomePage = () => {
       .then(res => res.json())
       .then(data => {
         setClinicsData(data);
-        setSelectedClinicId(data[0]?.id || null);
+        setSelectedClinicId(null);
         setLoading(false);
       })
       .catch(() => {
@@ -47,12 +49,14 @@ const HomePage = () => {
       });
   }, []);
 
-  // Get user location on mount
+  // centering on user's location
   useEffect(() => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (pos) => setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+
         (err) => setLocationError("Location access denied. Distance will not be personalized."),
+
         { enableHighAccuracy: true }
       );
     } else {
@@ -60,6 +64,27 @@ const HomePage = () => {
     }
   }, []);
 
+  // centering map on searched city
+  useEffect(() => {
+    if (search) {
+      fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(search)}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data && data.length > 0) {
+            setMapCenter({ lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) });
+            setLocationError("");
+          } else {
+            setLocationError("Location not found. Please try another city or area.");
+          }
+        })
+        .catch((err) => {
+          console.error("Failed to fetch location from Nominatim:", err);
+          setLocationError("Location service is currently unavailable. Please try again later.");
+        });
+    }
+  }, [search]);
+
+  
   // Fuzzy search
   const fuse = useMemo(() => new Fuse(clinicsData, fuseOptions), [clinicsData]);
   let filteredClinics = clinicsData;
@@ -97,7 +122,6 @@ const HomePage = () => {
   const services = useMemo(() => Array.from(new Set(clinicsToShow.flatMap(c => c.services || []))), [clinicsToShow]);
   // Distance filter options (in km, max 20)
   const distanceOptions = ["1", "2", "5", "10", "20"];
-
   // Filter by surgeon and service
   clinicsToShow = clinicsToShow.filter((clinic) => {
     const matchesSurgeon = !surgeon || clinic.surgeon === surgeon;
@@ -143,10 +167,10 @@ const HomePage = () => {
   const [showDropdownMap, setShowDropdownMap] = useState(false);
 
   return (
-    <main className="flex flex-col h-screen min-h-0 bg-slate-50 overflow-hidden">
-      <div className="flex-1 flex flex-col md:flex-row gap-4 h-full max-w-7xl mx-auto w-full p-2 md:p-6 overflow-hidden min-h-0">
+    <main className="flex h-screen min-h-0 bg-slate-50 overflow-hidden">
+      <div className="flex flex-row h-full max-w-7xl mx-auto w-full p-2 md:p-6 overflow-hidden min-h-0">
         {/* Left: List & Filters */}
-        <div className="bg-white rounded-lg shadow-md w-full md:w-1/3 max-w-md flex flex-col z-20 min-h-0 overflow-hidden">
+        <div className="bg-white rounded-lg shadow-md w-full md:w-2/5 max-w-lg flex flex-col z-20 min-h-0 overflow-hidden" style={{height: '600px'}}>
           <div className="overflow-x-auto">
             <Filters
               search={search}
@@ -165,17 +189,19 @@ const HomePage = () => {
           </div>
           <div className="flex-1 overflow-y-auto px-2 pb-4 min-h-0">
             {locationError && (
-              <div className="text-xs text-red-500 mb-2">{locationError}</div>
+              <div className="text-center text-red-500 py-2 font-medium">
+                {locationError}
+              </div>
             )}
             <div className="text-xs text-slate-500 mb-2 font-medium">
               {clinicsToShow.length} Results
             </div>
             {clinicsToShow.length === 0 && (
-              <div className="text-center text-slate-400 py-8">No clinics found matching your criteria.</div>
+              <div className="text-center text-slate-400 py-8">No clinics found. Try increasing your search area or removing some filters.</div>
             )}
             {blurredClinics.map((clinic) => (
               <div key={clinic.id} style={{ filter: 'blur(4px)', pointerEvents: 'none' }}>
-                <ClinicCard
+              <ClinicCard
                   clinic={{ ...clinic, distance: clinic.calculatedDistance != null ? `${clinic.calculatedDistance.toFixed(2)} KM` : "-" }}
                   selected={false}
                   onClick={() => {}}
@@ -211,12 +237,13 @@ const HomePage = () => {
         </div>
         {/* Right: Map */}
         {!isMobile && (
-          <div className="flex-1 w-full h-[300px] md:h-auto md:min-h-[600px] md:max-h-[calc(100vh-120px)] z-0 min-h-0">
+          <div className="flex-1 w-full h-[600px] z-0 min-h-0">
             <ClinicMap
               clinics={clinicsToShow}
               selectedClinicId={selectedClinicId}
               onMarkerClick={setSelectedClinicId}
               blurredClinicIds={blurredClinicIds}
+              center={mapCenter}
             />
           </div>
         )}
@@ -225,4 +252,4 @@ const HomePage = () => {
   );
 };
 
-export default HomePage; 
+export default HomePage;

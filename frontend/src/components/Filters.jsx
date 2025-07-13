@@ -33,6 +33,7 @@ const Filters = ({ search, setSearch, distance, setDistance, surgeon, setSurgeon
           onChange={(e) => setDistance(e.target.value)}
           className="col-span-1 border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white shadow-sm w-full"
         >
+          <option value="" hidden disabled>Distances</option>
           <option value="">All Distances</option>
           {distances.map((d) => (
             <option key={d} value={d}>{d}</option>
@@ -43,6 +44,7 @@ const Filters = ({ search, setSearch, distance, setDistance, surgeon, setSurgeon
           onChange={(e) => setSurgeon(e.target.value)}
           className="col-span-1 border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white shadow-sm w-full"
         >
+          <option value="" hidden disabled>Surgeons</option>
           <option value="">All Surgeons</option>
           {surgeons.map((s) => (
             <option key={s} value={s}>{s}</option>
@@ -53,6 +55,7 @@ const Filters = ({ search, setSearch, distance, setDistance, surgeon, setSurgeon
           onChange={(e) => setService(e.target.value)}
           className="col-span-1 border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white shadow-sm w-full"
         >
+          <option value="" hidden disabled>Services</option>
           <option value="">All Services</option>
           {services.map((s) => (
             <option key={s} value={s}>{s}</option>
