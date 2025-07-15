@@ -1,5 +1,6 @@
 import React, { useRef, useState, useEffect } from "react";
 import { API_BASE_URL } from '../utils/api';
+import { uploadClinicPhoto } from "../utils/uploadClinicPhoto";
 
 const API_URL = API_BASE_URL;
 
@@ -30,6 +31,7 @@ const AdminPanel = () => {
   const areaChartRef = useRef();
   const userChartRef = useRef();
   const [stats, setStats] = useState({ clinicViews: {}, areaViews: {}, userStats: [], queryStats: {} });
+  const [imageFile, setImageFile] = useState(null);
 
   useEffect(() => {
     fetchClinics();
@@ -52,11 +54,15 @@ const AdminPanel = () => {
   const handleAddClinic = async (e) => {
     e.preventDefault();
     setError(""); setMessage("");
-    const clinic = {
-      name, address, location, lat: parseFloat(lat), lng: parseFloat(lng), phone, email, website,
-      services: services.split(",").map(s => s.trim()), verified, surgeon, image
-    };
+    let imageUrl = image;
     try {
+     if (imageFile) {
+        imageUrl = await uploadClinicPhoto(imageFile, name.replace(/\s+/g, "_"));
+      }
+      const clinic = {
+        name, address, location, lat: parseFloat(lat), lng: parseFloat(lng), phone, email, website,
+        services: services.split(",").map(s => s.trim()), verified, surgeon, image
+      };
       const res = await fetch(`${API_URL}/clinics`, {
         method: "POST",
         headers: {
@@ -212,7 +218,7 @@ const AdminPanel = () => {
                 <input value={website} onChange={e => setWebsite(e.target.value)} placeholder="Website" className="border rounded-lg px-3 py-2 text-sm" />
                 <input value={services} onChange={e => setServices(e.target.value)} placeholder="Services (comma separated)" className="border rounded-lg px-3 py-2 text-sm" />
                 <input value={surgeon} onChange={e => setSurgeon(e.target.value)} placeholder="Surgeon" className="border rounded-lg px-3 py-2 text-sm" />
-                <input value={image} onChange={e => setImage(e.target.value)} placeholder="Image Path" className="border rounded-lg px-3 py-2 text-sm" />
+                <input type="file" accept="image/*" onChange={e => setImageFile(e.target.files[0])} className="border rounded-lg px-3 py-2 text-sm col-span-2" />
                 <label className="flex items-center gap-2 col-span-2"><input type="checkbox" checked={verified} onChange={e => setVerified(e.target.checked)} /> Verified</label>
               </div>
               <button type="submit" className="bg-blue-600 text-white rounded-lg px-4 py-2 font-semibold hover:bg-blue-700">Add Clinic</button>
@@ -243,7 +249,7 @@ const AdminPanel = () => {
                       <input value={website} onChange={e => setWebsite(e.target.value)} placeholder="Website" className="border rounded-lg px-3 py-2 text-sm" />
                       <input value={services} onChange={e => setServices(e.target.value)} placeholder="Services (comma separated)" className="border rounded-lg px-3 py-2 text-sm" />
                       <input value={surgeon} onChange={e => setSurgeon(e.target.value)} placeholder="Surgeon" className="border rounded-lg px-3 py-2 text-sm" />
-                      <input value={image} onChange={e => setImage(e.target.value)} placeholder="Image Path" className="border rounded-lg px-3 py-2 text-sm" />
+                      <input type="file" accept="image/*" onChange={e => setImageFile(e.target.files[0])} className="border rounded-lg px-3 py-2 text-sm col-span-2" />
                       <label className="flex items-center gap-2 col-span-2"><input type="checkbox" checked={verified} onChange={e => setVerified(e.target.checked)} /> Verified</label>
                     </div>
                     <button type="submit" className="bg-blue-600 text-white rounded-lg px-4 py-2 font-semibold hover:bg-blue-700">Save Changes</button>
