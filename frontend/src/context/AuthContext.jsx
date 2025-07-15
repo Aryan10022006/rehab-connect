@@ -20,6 +20,17 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // Session duration: 1 hour in ms
+  const SESSION_DURATION = 60 * 60 * 1000;
+
+  // Helper: Check if session is expired
+  const isSessionExpired = () => {
+    const sessionStart = localStorage.getItem('user_session_start');
+    if (!sessionStart) return true;
+    const now = Date.now();
+    return now - Number(sessionStart) > SESSION_DURATION;
+  };
+
   // Listen for auth state changes
   useEffect(() => {
     console.log('Setting up Firebase auth listener...');
@@ -27,6 +38,15 @@ export function AuthProvider({ children }) {
       console.log('Auth state changed:', firebaseUser ? 'User logged in' : 'User logged out');
       
       if (firebaseUser) {
+        const sessionStart = localStorage.getItem('user_session_start');
+        // Only check expiry if sessionStart exists (i.e., not first login)
+        if (sessionStart && isSessionExpired()) {
+          await signOut(auth);
+          setUser(null);
+          localStorage.removeItem('user_session_start');
+          setLoading(false);
+          return;
+        }
         // Get Firebase ID token
         try {
           const token = await firebaseUser.getIdToken();
@@ -83,6 +103,8 @@ export function AuthProvider({ children }) {
   const loginWithEmail = async (email, password) => {
     try {
       const result = await signInWithEmailAndPassword(auth, email, password);
+      // Set session start time
+      localStorage.setItem('user_session_start', Date.now().toString());
       return { success: true, user: result.user };
     } catch (error) {
       console.error('Email login error:', error);
@@ -96,6 +118,8 @@ export function AuthProvider({ children }) {
       provider.addScope('email');
       provider.addScope('profile');
       const result = await signInWithPopup(auth, provider);
+      // Set session start time
+      localStorage.setItem('user_session_start', Date.now().toString());
       return { success: true, user: result.user };
     } catch (error) {
       console.error('Google login error:', error);
@@ -110,6 +134,8 @@ export function AuthProvider({ children }) {
       if (displayName && result.user) {
         await updateProfile(result.user, { displayName });
       }
+      // Set session start time
+      localStorage.setItem('user_session_start', Date.now().toString());
       return { success: true, user: result.user };
     } catch (error) {
       console.error('Registration error:', error);
@@ -121,6 +147,7 @@ export function AuthProvider({ children }) {
     try {
       await signOut(auth);
       setUser(null);
+      localStorage.removeItem('user_session_start');
       return { success: true };
     } catch (error) {
       return { success: false, message: error.message };

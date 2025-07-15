@@ -45,7 +45,8 @@ const RegisterPage = () => {
     const result = await register(formData.email, formData.password, formData.name);
     
     if (result.success) {
-      navigate('/dashboard');
+      localStorage.setItem('user_session_start', Date.now().toString());
+      navigate('/user');
     } else {
       setError(result.message);
     }
@@ -59,6 +60,7 @@ const RegisterPage = () => {
     const result = await loginWithGoogle();
     
     if (result.success) {
+      localStorage.setItem('user_session_start', Date.now().toString());
       navigate('/dashboard');
     } else {
       setError(result.message);

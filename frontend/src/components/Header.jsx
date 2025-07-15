@@ -1,6 +1,6 @@
 import React from "react";
 import { FaBell, FaUserCircle, FaClinicMedical } from "react-icons/fa";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 function getUserName() {
   const user = JSON.parse(localStorage.getItem("user"));
@@ -21,23 +21,49 @@ function getUserName() {
 const Header = () => {
   const name = getUserName();
   const navigate = useNavigate();
+  const location = useLocation();
   const handleLogout = () => {
     localStorage.removeItem("user");
     navigate("/login");
+  };
+  const handleBrowseClinics = () => {
+    if (location.pathname === "/clinics") {
+      window.location.reload();
+    } else {
+      navigate("/clinics");
+    }
   };
   return (
     <header className="w-full bg-blue-800 text-white shadow-md sticky top-0 z-40">
       <nav className="max-w-7xl mx-auto flex items-center justify-between px-4 py-3">
         <div className="flex items-center gap-3">
-          <FaClinicMedical className="text-3xl text-blue-200" />
+          <img src="/robobionicslogo.png" alt="Robo Bionics Logo" className="h-16 w-16 object-contain mr-2" />
           <button onClick={() => navigate('/')} className="text-2xl font-bold tracking-tight hover:text-blue-200 transition focus:outline-none">Rehab Connect</button>
-          <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full font-semibold hidden md:inline">by Robo Bionics</span>
         </div>
-        <ul className="hidden md:flex gap-6 text-base font-medium">
-          <li><button onClick={() => navigate('/')} className="hover:text-blue-200 transition bg-transparent border-none outline-none cursor-pointer">Home</button></li>
-          <li><a href="#clinics" className="hover:text-blue-200 transition">Browse Clinics</a></li>
-          <li><a href="#about" className="hover:text-blue-200 transition">About</a></li>
-          <li><a href="#contact" className="hover:text-blue-200 transition">Contact</a></li>
+        <ul className="hidden md:flex gap-2 text-base font-medium items-center">
+          {[
+            { label: 'Home', path: '/' },
+            { label: 'Browse Clinics', path: '/clinics', onClick: handleBrowseClinics },
+            { label: 'About', path: '#about' },
+            { label: 'Contact', path: '#contact' },
+          ].map((item) => (
+            <li key={item.label}>
+              <button
+                onClick={() => {
+                  if (item.onClick) item.onClick();
+                  else if (item.path.startsWith('#')) window.location.hash = item.path;
+                  else navigate(item.path);
+                }}
+                className={`px-4 py-2 rounded-full font-semibold transition border-none outline-none cursor-pointer flex items-center
+                  ${location.pathname === item.path
+                    ? 'bg-white text-blue-800 shadow'
+                    : 'bg-transparent text-white hover:bg-white/20'}
+                `}
+              >
+                {item.label}
+              </button>
+            </li>
+          ))}
         </ul>
         <div className="flex items-center gap-4">
           {name && <span className="hidden md:inline text-base font-semibold mr-2">Hello, {name}</span>}

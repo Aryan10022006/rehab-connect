@@ -93,7 +93,7 @@ const UserPortal = () => {
           <h3 className="text-lg font-semibold mb-4">Quick Actions</h3>
           <div className="space-y-3">
             <button 
-              onClick={() => navigate('/dashboard')}
+              onClick={() => navigate('/clinics')}
               className="w-full flex items-center gap-3 p-3 bg-blue-50 hover:bg-blue-100 rounded-lg transition"
             >
               <FaSearch className="text-blue-600" />
@@ -144,7 +144,7 @@ const UserPortal = () => {
           <FaHistory className="text-4xl text-gray-300 mx-auto mb-4" />
           <p className="text-gray-500">No clinics viewed yet</p>
           <button 
-            onClick={() => navigate('/dashboard')}
+            onClick={() => navigate('/clinics')}
             className="mt-4 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
           >
             Start Exploring
@@ -182,7 +182,7 @@ const UserPortal = () => {
         <FaHeart className="text-4xl text-gray-300 mx-auto mb-4" />
         <p className="text-gray-500">No favorite clinics yet</p>
         <button 
-          onClick={() => navigate('/dashboard')}
+          onClick={() => navigate('/clinics')}
           className="mt-4 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
         >
           Find Clinics
@@ -198,7 +198,7 @@ const UserPortal = () => {
         <FaCalendarAlt className="text-4xl text-gray-300 mx-auto mb-4" />
         <p className="text-gray-500">No appointments scheduled</p>
         <button 
-          onClick={() => navigate('/dashboard')}
+          onClick={() => navigate('/clinics')}
           className="mt-4 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
         >
           Book Appointment
@@ -226,7 +226,7 @@ const UserPortal = () => {
             </div>
             <div className="flex gap-3">
               <button 
-                onClick={() => navigate('/dashboard')}
+                onClick={() => navigate('/clinics')}
                 className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition font-medium"
               >
                 Find Clinics

@@ -30,7 +30,8 @@ const LoginPage = () => {
     const result = await loginWithEmail(formData.email, formData.password);
     
     if (result.success) {
-      navigate('/dashboard');
+      localStorage.setItem('user_session_start', Date.now().toString());
+      navigate('/user');
     } else {
       setError(result.message);
     }
@@ -44,7 +45,8 @@ const LoginPage = () => {
     const result = await loginWithGoogle();
     
     if (result.success) {
-      navigate('/dashboard');
+      localStorage.setItem('user_session_start', Date.now().toString());
+      navigate('/user');
     } else {
       setError(result.message);
     }

@@ -56,6 +56,7 @@ function AppContent() {
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/clinics" element={<HomePage />} />
         
         {/* Protected routes - require authentication */}
         <Route 

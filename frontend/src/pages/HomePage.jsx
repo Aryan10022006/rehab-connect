@@ -7,6 +7,7 @@ import Filters from "../components/Filters";
 import { useMediaQuery } from 'react-responsive';
 import { API_BASE_URL } from '../utils/api';
 import { useAuth } from '../context/AuthContext';
+import Header from "../components/Header";
 
 function getUnique(arr, key) {
   return [...new Set(arr.map((item) => item[key]).filter(Boolean))];
@@ -167,88 +168,91 @@ const HomePage = () => {
   const [showDropdownMap, setShowDropdownMap] = useState(false);
 
   return (
-    <main className="flex h-screen min-h-0 bg-slate-50 overflow-hidden">
-      <div className="flex flex-row h-full max-w-7xl mx-auto w-full p-2 md:p-6 overflow-hidden min-h-0">
-        {/* Left: List & Filters */}
-        <div className="bg-white rounded-lg shadow-md w-full md:w-2/5 max-w-lg flex flex-col z-20 min-h-0 overflow-hidden" style={{height: '600px'}}>
-          <div className="overflow-x-auto">
-            <Filters
-              search={search}
-              setSearch={setSearch}
-              distance={distance}
-              setDistance={setDistance}
-              surgeon={surgeon}
-              setSurgeon={setSurgeon}
-              service={service}
-              setService={setService}
-              surgeons={surgeons}
-              services={services}
-              distances={distanceOptions}
-              onClear={handleClearFilters}
-            />
-          </div>
-          <div className="flex-1 overflow-y-auto px-2 pb-4 min-h-0">
-            {locationError && (
-              <div className="text-center text-red-500 py-2 font-medium">
-                {locationError}
-              </div>
-            )}
-            <div className="text-xs text-slate-500 mb-2 font-medium">
-              {clinicsToShow.length} Results
+    <>
+      <Header />
+      <main className="flex h-screen min-h-0 bg-slate-50 overflow-hidden">
+        <div className="flex flex-row h-full max-w-7xl mx-auto w-full p-2 md:p-6 overflow-hidden min-h-0">
+          {/* Left: List & Filters */}
+          <div className="bg-white rounded-lg shadow-md w-full md:w-2/5 max-w-lg flex flex-col z-20 min-h-0 overflow-hidden" style={{height: '600px'}}>
+            <div className="overflow-x-auto">
+              <Filters
+                search={search}
+                setSearch={setSearch}
+                distance={distance}
+                setDistance={setDistance}
+                surgeon={surgeon}
+                setSurgeon={setSurgeon}
+                service={service}
+                setService={setService}
+                surgeons={surgeons}
+                services={services}
+                distances={distanceOptions}
+                onClear={handleClearFilters}
+              />
             </div>
-            {clinicsToShow.length === 0 && (
-              <div className="text-center text-slate-400 py-8">No clinics found. Try increasing your search area or removing some filters.</div>
-            )}
-            {blurredClinics.map((clinic) => (
-              <div key={clinic.id} style={{ filter: 'blur(4px)', pointerEvents: 'none' }}>
-              <ClinicCard
-                  clinic={{ ...clinic, distance: clinic.calculatedDistance != null ? `${clinic.calculatedDistance.toFixed(2)} KM` : "-" }}
-                  selected={false}
-                  onClick={() => {}}
-                  locked={true}
-                />
+            <div className="flex-1 overflow-y-auto px-2 pb-4 min-h-0">
+              {locationError && (
+                <div className="text-center text-red-500 py-2 font-medium">
+                  {locationError}
+                </div>
+              )}
+              <div className="text-xs text-slate-500 mb-2 font-medium">
+                {clinicsToShow.length} Results
               </div>
-            ))}
-            {visibleClinics.map((clinic) => (
-              <div key={clinic.id}>
+              {clinicsToShow.length === 0 && (
+                <div className="text-center text-slate-400 py-8">No clinics found. Try increasing your search area or removing some filters.</div>
+              )}
+              {blurredClinics.map((clinic) => (
+                <div key={clinic.id} style={{ filter: 'blur(4px)', pointerEvents: 'none' }}>
                 <ClinicCard
-                  clinic={{ ...clinic, distance: clinic.calculatedDistance != null ? `${clinic.calculatedDistance.toFixed(2)} KM` : "-" }}
-                  selected={clinic.id === selectedClinicId}
-                  onClick={() => {
-                    setSelectedClinicId(clinic.id);
-                    if (isMobile) setShowDropdownMap(true);
-                  }}
-                  locked={false}
-                />
-                {/* Dropdown map for mobile */}
-                {isMobile && showDropdownMap && clinic.id === selectedClinicId && (
-                  <div className="transition-all duration-300 overflow-hidden rounded-lg border shadow mt-2" style={{ maxHeight: '400px' }}>
-                    <ClinicMap
-                      clinics={[clinic]}
-                      selectedClinicId={clinic.id}
-                      onMarkerClick={() => {}}
-                      blurredClinicIds={[]}
-                    />
-                  </div>
-                )}
-              </div>
-            ))}
+                    clinic={{ ...clinic, distance: clinic.calculatedDistance != null ? `${clinic.calculatedDistance.toFixed(2)} KM` : "-" }}
+                    selected={false}
+                    onClick={() => {}}
+                    locked={true}
+                  />
+                </div>
+              ))}
+              {visibleClinics.map((clinic) => (
+                <div key={clinic.id}>
+                  <ClinicCard
+                    clinic={{ ...clinic, distance: clinic.calculatedDistance != null ? `${clinic.calculatedDistance.toFixed(2)} KM` : "-" }}
+                    selected={clinic.id === selectedClinicId}
+                    onClick={() => {
+                      setSelectedClinicId(clinic.id);
+                      if (isMobile) setShowDropdownMap(true);
+                    }}
+                    locked={false}
+                  />
+                  {/* Dropdown map for mobile */}
+                  {isMobile && showDropdownMap && clinic.id === selectedClinicId && (
+                    <div className="transition-all duration-300 overflow-hidden rounded-lg border shadow mt-2" style={{ maxHeight: '400px' }}>
+                      <ClinicMap
+                        clinics={[clinic]}
+                        selectedClinicId={clinic.id}
+                        onMarkerClick={() => {}}
+                        blurredClinicIds={[]}
+                      />
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
+          {/* Right: Map */}
+          {!isMobile && (
+            <div className="flex-1 w-full h-[600px] z-0 min-h-0">
+              <ClinicMap
+                clinics={clinicsToShow}
+                selectedClinicId={selectedClinicId}
+                onMarkerClick={setSelectedClinicId}
+                blurredClinicIds={blurredClinicIds}
+                center={mapCenter}
+              />
+            </div>
+          )}
         </div>
-        {/* Right: Map */}
-        {!isMobile && (
-          <div className="flex-1 w-full h-[600px] z-0 min-h-0">
-            <ClinicMap
-              clinics={clinicsToShow}
-              selectedClinicId={selectedClinicId}
-              onMarkerClick={setSelectedClinicId}
-              blurredClinicIds={blurredClinicIds}
-              center={mapCenter}
-            />
-          </div>
-        )}
-      </div>
-    </main>
+      </main>
+    </>
   );
 };
 

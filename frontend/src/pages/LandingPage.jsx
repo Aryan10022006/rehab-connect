@@ -5,6 +5,31 @@ import { FaClinicMedical, FaUserMd, FaMapMarkerAlt, FaShieldAlt, FaStar, FaArrow
 const LandingPage = () => {
   const navigate = useNavigate();
 
+  // Helper: Check if user is logged in and session is valid
+  const isUserLoggedIn = () => {
+    const sessionStart = localStorage.getItem('user_session_start');
+    if (!sessionStart) return false;
+    const now = Date.now();
+    // 1 hour session
+    return now - Number(sessionStart) <= 60 * 60 * 1000;
+  };
+
+  const handleGetStarted = () => {
+    if (isUserLoggedIn()) {
+      navigate('/user');
+    } else {
+      navigate('/register');
+    }
+  };
+
+  const handleSignIn = () => {
+    if (isUserLoggedIn()) {
+      navigate('/user');
+    } else {
+      navigate('/login');
+    }
+  };
+
   const features = [
     {
       icon: <FaMapMarkerAlt className="text-3xl text-blue-600" />,
@@ -42,19 +67,18 @@ const LandingPage = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-3">
-              <FaClinicMedical className="text-3xl text-blue-600" />
+              <img src="/robobionicslogo.png" alt="Robo Bionics Logo" className="h-16 w-16 object-contain mr-2" />
               <span className="text-2xl font-bold text-gray-900">Rehab Connect</span>
-              <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full font-semibold">by Robo Bionics</span>
             </div>
             <div className="flex items-center space-x-4">
               <button 
-                onClick={() => navigate('/login')}
+                onClick={handleSignIn}
                 className="text-gray-700 hover:text-blue-600 font-medium transition"
               >
                 Sign In
               </button>
               <button 
-                onClick={() => navigate('/register')}
+                onClick={handleGetStarted}
                 className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 font-medium transition"
               >
                 Get Started
@@ -79,13 +103,13 @@ const LandingPage = () => {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
               <button 
-                onClick={() => navigate('/register')}
+                onClick={handleGetStarted}
                 className="bg-blue-600 text-white px-8 py-4 rounded-lg hover:bg-blue-700 font-semibold text-lg flex items-center justify-center gap-2 transition transform hover:scale-105"
               >
                 Get Started <FaArrowRight />
               </button>
               <button 
-                onClick={() => navigate('/login')}
+                onClick={handleSignIn}
                 className="border-2 border-blue-600 text-blue-600 px-8 py-4 rounded-lg hover:bg-blue-50 font-semibold text-lg transition"
               >
                 Sign In
@@ -135,13 +159,13 @@ const LandingPage = () => {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <button 
-              onClick={() => navigate('/register')}
+              onClick={handleGetStarted}
               className="bg-white text-blue-600 px-8 py-4 rounded-lg hover:bg-gray-100 font-semibold text-lg transition transform hover:scale-105"
             >
               Create Free Account
             </button>
             <button 
-              onClick={() => navigate('/login')}
+              onClick={handleSignIn}
               className="border-2 border-white text-white px-8 py-4 rounded-lg hover:bg-white/10 font-semibold text-lg transition"
             >
               Sign In Now
@@ -164,7 +188,7 @@ const LandingPage = () => {
                 Your health, our priority.
               </p>
               <div className="text-sm text-gray-500">
-                © 2025 Rehab Connect by Robo Bionics. All rights reserved.
+                © 2025 Rehab Connect. All rights reserved.
               </div>
             </div>
             <div>
