@@ -96,13 +96,10 @@ function AppContent() {
         {/* Admin routes */}
         <Route path="/admin-secret-login" element={<AdminLoginPage />} />
         <Route 
-          path="/admin" 
+          path="/admin/*" 
           element={
             <AdminRoute>
-              <>
-                <Header />
-                <AdminPanel />
-              </>
+              <AdminPanel />
             </AdminRoute>
           } 
         />

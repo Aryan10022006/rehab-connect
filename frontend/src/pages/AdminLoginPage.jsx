@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-const ADMIN_EMAIL = "aryanst800@gmail.com"; // Change as needed
-const ADMIN_PASSWORD = "aryan123"; // Change as needed
+// Admin credentials from env: {"admin1@email.com":"password1",...}
+const ADMIN_USERS = process.env.REACT_APP_ADMIN_USERS ? JSON.parse(process.env.REACT_APP_ADMIN_USERS) : {};
 
 const AdminLoginPage = () => {
   const [email, setEmail] = useState("");
@@ -12,8 +12,9 @@ const AdminLoginPage = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
+    if (ADMIN_USERS[email] && ADMIN_USERS[email] === password) {
       localStorage.setItem("admin", "true");
+      localStorage.setItem("admin_email", email);
       localStorage.setItem("admin_login_time", Date.now().toString());
       navigate("/admin");
     } else {

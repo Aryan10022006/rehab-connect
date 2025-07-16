@@ -1,273 +1,230 @@
-import React, { useRef, useState, useEffect } from "react";
-import { API_BASE_URL } from '../utils/api';
-import { uploadClinicPhoto } from "../utils/uploadClinicPhoto";
+import React, { useEffect, useState, useRef } from "react";
+import { Routes, Route, useNavigate } from "react-router-dom";
+import AdminNavbar from "../components/AdminNavbar";
+import { db } from "../config/firebase";
+import { collection, getDocs } from "firebase/firestore";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 
-const API_URL = API_BASE_URL;
+const COLORS = ["#2563eb", "#10b981", "#f59e42", "#ef4444", "#6366f1", "#fbbf24", "#14b8a6", "#a21caf"];
 
-const TABS = ["Statistics", "Manage Clinics", "Bulk Upload"];
-
-const AdminPanel = () => {
-  const [clinics, setClinics] = useState([]);
-  const [name, setName] = useState("");
-  const [address, setAddress] = useState("");
-  const [location, setLocation] = useState("");
-  const [lat, setLat] = useState("");
-  const [lng, setLng] = useState("");
-  const [phone, setPhone] = useState("");
-  const [email, setEmail] = useState("");
-  const [website, setWebsite] = useState("");
-  const [services, setServices] = useState("");
-  const [verified, setVerified] = useState(false);
-  const [surgeon, setSurgeon] = useState("");
-  const [image, setImage] = useState("");
-  const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
-  const fileInput = useRef();
-  const [tab, setTab] = useState("Statistics");
-  const [editClinic, setEditClinic] = useState(null);
-  const [showEditModal, setShowEditModal] = useState(false);
-  const clinicChartRef = useRef();
-  const areaChartRef = useRef();
-  const userChartRef = useRef();
-  const [stats, setStats] = useState({ clinicViews: {}, areaViews: {}, userStats: [], queryStats: {} });
-  const [imageFile, setImageFile] = useState(null);
+const AdminDashboard = () => {
+  const [userStats, setUserStats] = useState([]);
+  const [clinicStats, setClinicStats] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchClinics();
+    const fetchData = async () => {
+      setLoading(true);
+      // Fetch users
+      const usersSnap = await getDocs(collection(db, "users"));
+      const users = usersSnap.docs.map(doc => doc.data());
+      // Fetch clinics
+      const clinicsSnap = await getDocs(collection(db, "clinics"));
+      const clinics = clinicsSnap.docs.map(doc => doc.data());
+      // Analytics: users by area
+      const areaCount = {};
+      users.forEach(u => {
+        const area = u.area || u.location || "Unknown";
+        areaCount[area] = (areaCount[area] || 0) + 1;
+      });
+      setUserStats(Object.entries(areaCount).map(([area, count]) => ({ area, count })));
+      // Analytics: clinics by area
+      const clinicAreaCount = {};
+      clinics.forEach(c => {
+        const area = c.location || c.area || "Unknown";
+        clinicAreaCount[area] = (clinicAreaCount[area] || 0) + 1;
+      });
+      setClinicStats(Object.entries(clinicAreaCount).map(([area, count]) => ({ area, count })));
+      setLoading(false);
+    };
+    fetchData();
   }, []);
 
-  const fetchClinics = async () => {
-    setLoading(true);
-    try {
-      const res = await fetch(`${API_URL}/clinics`);
-      const data = await res.json();
-      setClinics(data);
-    } catch {
-      setError("Failed to fetch clinics");
-    }
-    setLoading(false);
-  };
+  return (
+    <div className="p-8">
+      <h2 className="text-2xl font-bold mb-4">Admin Dashboard</h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="bg-white rounded shadow p-6">
+          <h3 className="font-semibold mb-2">Users by Area</h3>
+          {loading ? <div>Loading...</div> : userStats.length === 0 ? <div className="text-gray-400">No data</div> : (
+            <ResponsiveContainer width="100%" height={250}>
+              <BarChart data={userStats} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                <XAxis dataKey="area" />
+                <YAxis allowDecimals={false} />
+                <Tooltip />
+                <Bar dataKey="count" fill="#2563eb" />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
+        </div>
+        <div className="bg-white rounded shadow p-6">
+          <h3 className="font-semibold mb-2">Clinics by Area</h3>
+          {loading ? <div>Loading...</div> : clinicStats.length === 0 ? <div className="text-gray-400">No data</div> : (
+            <ResponsiveContainer width="100%" height={250}>
+              <PieChart>
+                <Pie data={clinicStats} dataKey="count" nameKey="area" cx="50%" cy="50%" outerRadius={80} label>
+                  {clinicStats.map((entry, idx) => <Cell key={`cell-${idx}`} fill={COLORS[idx % COLORS.length]} />)}
+                </Pie>
+                <Tooltip />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
 
-  const getToken = () => localStorage.getItem("authToken");
-
-  const handleAddClinic = async (e) => {
-    e.preventDefault();
-    setError(""); setMessage("");
-    let imageUrl = image;
-    try {
-     if (imageFile) {
-        imageUrl = await uploadClinicPhoto(imageFile, name.replace(/\s+/g, "_"));
-      }
-      const clinic = {
-        name, address, location, lat: parseFloat(lat), lng: parseFloat(lng), phone, email, website,
-        services: services.split(",").map(s => s.trim()), verified, surgeon, image
-      };
-      const res = await fetch(`${API_URL}/clinics`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${getToken()}`
-        },
-        body: JSON.stringify(clinic)
-      });
-      if (res.ok) {
-        setMessage("Clinic added successfully!");
-        fetchClinics();
-        setName(""); setAddress(""); setLocation(""); setLat(""); setLng(""); setPhone(""); setEmail(""); setWebsite(""); setServices(""); setVerified(false); setSurgeon(""); setImage("");
-      } else {
-        const data = await res.json();
-        setError(data.error || "Failed to add clinic");
-      }
-    } catch {
-      setError("Server error");
-    }
-  };
-
-  const handleBulkUpload = (e) => {
-    setError(""); setMessage("");
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = async (evt) => {
-      try {
-        const lines = evt.target.result.split("\n").filter(Boolean);
-        const newClinics = lines.map(line => {
-          const [name, address, location, lat, lng, phone, email, website, services, verified, surgeon, image] = line.split(",");
-          return {
-            name, address, location, lat: parseFloat(lat), lng: parseFloat(lng), phone, email, website,
-            services: services.split(";").map(s => s.trim()), verified: verified === "true", surgeon, image
-          };
-        });
-        const res = await fetch(`${API_URL}/clinics/bulk`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${getToken()}`
-          },
-          body: JSON.stringify(newClinics)
-        });
-        if (res.ok) {
-          setMessage("Bulk clinics added!");
-          fetchClinics();
-        } else {
-          const data = await res.json();
-          setError(data.error || "Bulk add failed");
-        }
-      } catch {
-        setError("Error parsing or uploading file");
-      }
+const UsersManagement = () => {
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    const fetchUsers = async () => {
+      setLoading(true);
+      const usersSnap = await getDocs(collection(db, "users"));
+      setUsers(usersSnap.docs.map(doc => doc.data()));
+      setLoading(false);
     };
-    reader.readAsText(file);
-  };
+    fetchUsers();
+  }, []);
+  return (
+    <div className="p-8">
+      <h2 className="text-2xl font-bold mb-4">Users</h2>
+      {loading ? <div>Loading...</div> : users.length === 0 ? <div className="text-gray-400">No users found.</div> : (
+        <div className="overflow-x-auto">
+          <table className="min-w-full bg-white rounded shadow">
+            <thead>
+              <tr>
+                <th className="px-4 py-2">Name</th>
+                <th className="px-4 py-2">Email</th>
+                <th className="px-4 py-2">Area</th>
+                <th className="px-4 py-2">Registered</th>
+              </tr>
+            </thead>
+            <tbody>
+              {users.map((u, idx) => (
+                <tr key={idx} className="border-t">
+                  <td className="px-4 py-2">{u.name || "-"}</td>
+                  <td className="px-4 py-2">{u.email || "-"}</td>
+                  <td className="px-4 py-2">{u.area || u.location || "-"}</td>
+                  <td className="px-4 py-2">{u.createdAt ? new Date(u.createdAt.seconds * 1000).toLocaleDateString() : "-"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+};
 
-  const openEditModal = (clinic) => {
-    setEditClinic(clinic);
-    setName(clinic.name || "");
-    setAddress(clinic.address || "");
-    setLocation(clinic.location || "");
-    setLat(clinic.lat || "");
-    setLng(clinic.lng || "");
-    setPhone(clinic.phone || "");
-    setEmail(clinic.email || "");
-    setWebsite(clinic.website || "");
-    setServices((clinic.services || []).join(", "));
-    setSurgeon(clinic.surgeon || "");
-    setImage(clinic.image || "");
-    setVerified(!!clinic.verified);
-    setShowEditModal(true);
-  };
-
-  const handleUpdateClinic = async (e) => {
-    e.preventDefault();
-    setError(""); setMessage("");
-    const clinic = {
-      name, address, location, lat: parseFloat(lat), lng: parseFloat(lng), phone, email, website,
-      services: services.split(",").map(s => s.trim()), verified, surgeon, image
+const ClinicsManagement = () => {
+  const [clinics, setClinics] = useState([]);
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    const fetchClinics = async () => {
+      setLoading(true);
+      const clinicsSnap = await getDocs(collection(db, "clinics"));
+      setClinics(clinicsSnap.docs.map(doc => doc.data()));
+      setLoading(false);
     };
-    try {
-      const res = await fetch(`${API_URL}/clinics/${editClinic.id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${getToken()}`
-        },
-        body: JSON.stringify(clinic)
-      });
-      if (res.ok) {
-        setMessage("Clinic updated successfully!");
-        fetchClinics();
-        setName(""); setAddress(""); setLocation(""); setLat(""); setLng(""); setPhone(""); setEmail(""); setWebsite(""); setServices(""); setVerified(false); setSurgeon(""); setImage("");
-      } else {
-        const data = await res.json();
-        setError(data.error || "Failed to update clinic");
-      }
-    } catch {
-      setError("Server error");
-    }
-    setShowEditModal(false);
-    setEditClinic(null);
+    fetchClinics();
+  }, []);
+  return (
+    <div className="p-8">
+      <h2 className="text-2xl font-bold mb-4">Clinics</h2>
+      {loading ? <div>Loading...</div> : clinics.length === 0 ? <div className="text-gray-400">No clinics found.</div> : (
+        <div className="overflow-x-auto">
+          <table className="min-w-full bg-white rounded shadow">
+            <thead>
+              <tr>
+                <th className="px-4 py-2">Name</th>
+                <th className="px-4 py-2">Area</th>
+                <th className="px-4 py-2">Surgeon</th>
+                <th className="px-4 py-2">Verified</th>
+              </tr>
+            </thead>
+            <tbody>
+              {clinics.map((c, idx) => (
+                <tr key={idx} className="border-t">
+                  <td className="px-4 py-2">{c.name || "-"}</td>
+                  <td className="px-4 py-2">{c.location || c.area || "-"}</td>
+                  <td className="px-4 py-2">{c.surgeon || "-"}</td>
+                  <td className="px-4 py-2">{c.verified ? "Yes" : "No"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+};
+
+const Settings = () => (
+  <div className="p-8">
+    <h2 className="text-2xl font-bold mb-4">Settings</h2>
+    <div className="bg-white rounded shadow p-6">Settings coming soon.</div>
+  </div>
+);
+
+const AdminPanel = () => {
+  const navigate = useNavigate();
+  const inactivityTimeout = 60 * 60 * 1000; // 1 hour in ms
+  const timerRef = useRef();
+
+  // Helper to logout
+  const logout = () => {
+    localStorage.removeItem("admin");
+    localStorage.removeItem("admin_email");
+    localStorage.removeItem("admin_login_time");
+    navigate("/admin-secret-login", { state: { usr: { expired: true } } });
   };
+
+  // Reset inactivity timer
+  const resetTimer = () => {
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(logout, inactivityTimeout);
+    // Optionally, update login time to keep session alive
+    localStorage.setItem("admin_login_time", Date.now().toString());
+  };
+
+  useEffect(() => {
+    // Check if admin session exists on mount
+    const admin = localStorage.getItem("admin");
+    const loginTime = localStorage.getItem("admin_login_time");
+    if (!admin || !loginTime) {
+      navigate("/admin-secret-login");
+      return;
+    }
+    // Start inactivity timer
+    resetTimer();
+    // Activity events
+    const events = ["mousemove", "keydown", "mousedown", "touchstart"];
+    events.forEach(evt => window.addEventListener(evt, resetTimer));
+    // Tab focus
+    window.addEventListener("focus", resetTimer);
+    // Clean up
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+      events.forEach(evt => window.removeEventListener(evt, resetTimer));
+      window.removeEventListener("focus", resetTimer);
+    };
+    // eslint-disable-next-line
+  }, [navigate]);
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      <div className="max-w-5xl mx-auto bg-white rounded-xl shadow-lg p-6">
-        <h2 className="text-2xl font-bold mb-4 text-blue-700">Admin Panel</h2>
-        {message && <div className="mb-2 text-green-600">{message}</div>}
-        {error && <div className="mb-2 text-red-600">{error}</div>}
-        <div className="flex gap-4 mb-6 border-b">
-          {TABS.map(t => (
-            <button key={t} onClick={()=>setTab(t)} className={`px-4 py-2 font-semibold ${tab===t ? 'border-b-4 border-blue-600 text-blue-700' : 'text-slate-500'}`}>{t}</button>
-          ))}
-        </div>
-        {tab === "Statistics" && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div>
-              <h3 className="font-bold mb-2 text-blue-800">Most Viewed Clinics</h3>
-              <canvas ref={clinicChartRef} height={200}></canvas>
-            </div>
-            <div>
-              <h3 className="font-bold mb-2 text-blue-800">Most Popular Areas</h3>
-              <canvas ref={areaChartRef} height={200}></canvas>
-            </div>
-            <div>
-              <h3 className="font-bold mb-2 text-blue-800">Most Active Users</h3>
-              <canvas ref={userChartRef} height={200}></canvas>
-            </div>
-            <div>
-              <h3 className="font-bold mb-2 text-blue-800">Most Common Queries</h3>
-              <ol className="list-decimal pl-5">
-                {Object.entries(stats.queryStats).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([q, count]) => (
-                  <li key={q}>{q} <span className="text-xs text-slate-500">({count} times)</span></li>
-                ))}
-              </ol>
-            </div>
-          </div>
-        )}
-        {tab === "Manage Clinics" && (
-          <div>
-            <form onSubmit={handleAddClinic} className="flex flex-col gap-3 mb-6">
-              <div className="grid grid-cols-2 gap-2">
-                <input value={name} onChange={e => setName(e.target.value)} placeholder="Clinic Name" className="border rounded-lg px-3 py-2 text-sm" required />
-                <input value={address} onChange={e => setAddress(e.target.value)} placeholder="Address" className="border rounded-lg px-3 py-2 text-sm" required />
-                <input value={location} onChange={e => setLocation(e.target.value)} placeholder="City/Location" className="border rounded-lg px-3 py-2 text-sm" required />
-                <input value={lat} onChange={e => setLat(e.target.value)} placeholder="Latitude" className="border rounded-lg px-3 py-2 text-sm" required />
-                <input value={lng} onChange={e => setLng(e.target.value)} placeholder="Longitude" className="border rounded-lg px-3 py-2 text-sm" required />
-                <input value={phone} onChange={e => setPhone(e.target.value)} placeholder="Phone" className="border rounded-lg px-3 py-2 text-sm" />
-                <input value={email} onChange={e => setEmail(e.target.value)} placeholder="Email" className="border rounded-lg px-3 py-2 text-sm" />
-                <input value={website} onChange={e => setWebsite(e.target.value)} placeholder="Website" className="border rounded-lg px-3 py-2 text-sm" />
-                <input value={services} onChange={e => setServices(e.target.value)} placeholder="Services (comma separated)" className="border rounded-lg px-3 py-2 text-sm" />
-                <input value={surgeon} onChange={e => setSurgeon(e.target.value)} placeholder="Surgeon" className="border rounded-lg px-3 py-2 text-sm" />
-                <input type="file" accept="image/*" onChange={e => setImageFile(e.target.files[0])} className="border rounded-lg px-3 py-2 text-sm col-span-2" />
-                <label className="flex items-center gap-2 col-span-2"><input type="checkbox" checked={verified} onChange={e => setVerified(e.target.checked)} /> Verified</label>
-              </div>
-              <button type="submit" className="bg-blue-600 text-white rounded-lg px-4 py-2 font-semibold hover:bg-blue-700">Add Clinic</button>
-            </form>
-            <div>
-              <h3 className="font-bold mb-2">Clinics List</h3>
-              {loading ? <div>Loading...</div> : (
-                <ul className="list-disc pl-5">
-                  {clinics.map((c, i) => (
-                    <li key={i}>{c.name} - {c.address}, {c.location} ({c.lat}, {c.lng}) <button className="ml-2 text-blue-600 underline text-xs" onClick={()=>openEditModal(c)}>Edit</button></li>
-                  ))}
-                </ul>
-              )}
-            </div>
-            {showEditModal && (
-              <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
-                <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-lg">
-                  <h3 className="text-xl font-bold mb-4">Edit Clinic</h3>
-                  <form onSubmit={handleUpdateClinic} className="flex flex-col gap-3">
-                    <div className="grid grid-cols-2 gap-2">
-                      <input value={name} onChange={e => setName(e.target.value)} placeholder="Clinic Name" className="border rounded-lg px-3 py-2 text-sm" required />
-                      <input value={address} onChange={e => setAddress(e.target.value)} placeholder="Address" className="border rounded-lg px-3 py-2 text-sm" required />
-                      <input value={location} onChange={e => setLocation(e.target.value)} placeholder="City/Location" className="border rounded-lg px-3 py-2 text-sm" required />
-                      <input value={lat} onChange={e => setLat(e.target.value)} placeholder="Latitude" className="border rounded-lg px-3 py-2 text-sm" required />
-                      <input value={lng} onChange={e => setLng(e.target.value)} placeholder="Longitude" className="border rounded-lg px-3 py-2 text-sm" required />
-                      <input value={phone} onChange={e => setPhone(e.target.value)} placeholder="Phone" className="border rounded-lg px-3 py-2 text-sm" />
-                      <input value={email} onChange={e => setEmail(e.target.value)} placeholder="Email" className="border rounded-lg px-3 py-2 text-sm" />
-                      <input value={website} onChange={e => setWebsite(e.target.value)} placeholder="Website" className="border rounded-lg px-3 py-2 text-sm" />
-                      <input value={services} onChange={e => setServices(e.target.value)} placeholder="Services (comma separated)" className="border rounded-lg px-3 py-2 text-sm" />
-                      <input value={surgeon} onChange={e => setSurgeon(e.target.value)} placeholder="Surgeon" className="border rounded-lg px-3 py-2 text-sm" />
-                      <input type="file" accept="image/*" onChange={e => setImageFile(e.target.files[0])} className="border rounded-lg px-3 py-2 text-sm col-span-2" />
-                      <label className="flex items-center gap-2 col-span-2"><input type="checkbox" checked={verified} onChange={e => setVerified(e.target.checked)} /> Verified</label>
-                    </div>
-                    <button type="submit" className="bg-blue-600 text-white rounded-lg px-4 py-2 font-semibold hover:bg-blue-700">Save Changes</button>
-                    <button type="button" className="mt-2 text-slate-500 underline" onClick={()=>setShowEditModal(false)}>Cancel</button>
-                  </form>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-        {tab === "Bulk Upload" && (
-          <div>
-            <form className="mb-6">
-              <label className="block mb-2 font-medium">Bulk Add Clinics (CSV: name,address,location,lat,lng,phone,email,website,services[; separated],verified,surgeon,image per line)</label>
-              <input type="file" accept=".csv" ref={fileInput} onChange={handleBulkUpload} className="block" />
-            </form>
-          </div>
-        )}
+    <div className="min-h-screen bg-gray-100">
+      <AdminNavbar />
+      <div className="max-w-7xl mx-auto">
+        <Routes>
+          <Route path="/" element={<AdminDashboard />} />
+          <Route path="dashboard" element={<AdminDashboard />} />
+          <Route path="clinics" element={<ClinicsManagement />} />
+          <Route path="users" element={<UsersManagement />} />
+          <Route path="settings" element={<Settings />} />
+        </Routes>
       </div>
     </div>
   );
