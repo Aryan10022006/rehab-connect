@@ -11,6 +11,8 @@ import AdminLoginPage from "./pages/AdminLoginPage";
 import ClinicDetailPage from "./pages/ClinicDetailPage";
 import AdminPanel from "./pages/AdminPanel";
 import { useAuth } from "./context/AuthContext";
+import Footer from './components/Footer';
+import ContactPage from "./pages/ContactPage";
 
 // Protected route component for authenticated users
 function ProtectedRoute({ children }) {
@@ -50,13 +52,14 @@ function AdminRoute({ children }) {
 // App content with auth context
 function AppContent() {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className=" bg-gray-50">
       <Routes>
         {/* Public routes */}
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/clinics" element={<HomePage />} />
+        <Route path="/contact" element={<ContactPage />} />
         
         {/* Protected routes - require authentication */}
         <Route 

@@ -1,6 +1,12 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+const getApiUrl = () => {
+  let url = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000/api';
+  if (url.endsWith('/')) url = url.slice(0, -1);
+  return url;
+};
+
 const AdminLoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -11,8 +17,8 @@ const AdminLoginPage = () => {
     e.preventDefault();
     setError("");
     try {
-      const apiUrl = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000';
-      const response = await fetch(`${apiUrl}/api/admin/login`, {
+      const apiUrl = getApiUrl();
+      const response = await fetch(`${apiUrl}/admin/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })

@@ -1,9 +1,11 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaClinicMedical, FaUserMd, FaMapMarkerAlt, FaShieldAlt, FaStar, FaArrowRight, FaCheck } from 'react-icons/fa';
+import { FaClinicMedical, FaUserMd, FaMapMarkerAlt, FaShieldAlt, FaStar, FaArrowRight, FaCheck, FaBars, FaTimes } from 'react-icons/fa';
+import Footer from '../components/Footer';
 
 const LandingPage = () => {
   const navigate = useNavigate();
+  const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
 
   // Helper: Check if user is logged in and session is valid
   const isUserLoggedIn = () => {
@@ -61,30 +63,52 @@ const LandingPage = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50">
+    <div className="flex flex-col min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50">
       {/* Navigation */}
-      <nav className="bg-white/95 backdrop-blur-sm shadow-sm sticky top-0 z-50">
+      <nav className="bg-blue-600 backdrop-blur-sm shadow-sm sticky top-0 z-50 relative">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-3">
-              <img src="/robobionicslogo.png" alt="Robo Bionics Logo" className="h-16 w-16 object-contain mr-2" />
-              <span className="text-2xl font-bold text-gray-900">Rehab Connect</span>
+              <img src="/robobionicslogo.png" alt="Robo Bionics Logo" className="h-24 w-24 md:h-32 md:w-32 object-contain mr-2 transition-all duration-200" />
+              <span className="text-2xl font-bold text-white">Rehab Connect</span>
             </div>
-            <div className="flex items-center space-x-4">
+            {/* Desktop Nav */}
+            <div className="hidden md:flex items-center space-x-4">
               <button 
                 onClick={handleSignIn}
-                className="text-gray-700 hover:text-blue-600 font-medium transition"
+                className="text-white hover:text-grey-600 font-medium transition"
               >
                 Sign In
               </button>
               <button 
                 onClick={handleGetStarted}
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 font-medium transition"
+                className="bg-white text-blue px-4 py-2 rounded-lg hover:bg-grey font-medium transition"
               >
                 Get Started
               </button>
             </div>
+            {/* Mobile Hamburger */}
+            <button className="md:hidden ml-2 p-2 rounded focus:outline-none hover:bg-blue-700" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
+              {mobileMenuOpen ? <FaTimes className="text-2xl" /> : <FaBars className="text-2xl" />}
+            </button>
           </div>
+          {/* Mobile Nav Dropdown */}
+          {mobileMenuOpen && (
+            <div className="absolute top-full left-0 w-full bg-blue-600 shadow-lg z-50 flex flex-col md:hidden animate-fade-in">
+              <button
+                onClick={() => { setMobileMenuOpen(false); handleSignIn(); }}
+                className="w-full text-left px-6 py-4 border-b border-blue-700 text-lg font-semibold transition bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                Sign In
+              </button>
+              <button
+                onClick={() => { setMobileMenuOpen(false); handleGetStarted(); }}
+                className="w-full text-left px-6 py-4 text-lg font-semibold transition bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                Get Started
+              </button>
+            </div>
+          )}
         </div>
       </nav>
 
@@ -173,45 +197,9 @@ const LandingPage = () => {
           </div>
         </div>
       </section>
-
-      {/* Footer */}
-      <footer className="bg-gray-900 text-white py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid md:grid-cols-4 gap-8">
-            <div className="col-span-2">
-              <div className="flex items-center space-x-3 mb-4">
-                <FaClinicMedical className="text-2xl text-blue-400" />
-                <span className="text-xl font-bold">Rehab Connect</span>
-              </div>
-              <p className="text-gray-400 mb-4">
-                Connecting patients with the best rehabilitation clinics across India. 
-                Your health, our priority.
-              </p>
-              <div className="text-sm text-gray-500">
-                © 2025 Rehab Connect. All rights reserved.
-              </div>
-            </div>
-            <div>
-              <h3 className="font-semibold mb-4">Platform</h3>
-              <ul className="space-y-2 text-gray-400">
-                <li>Find Clinics</li>
-                <li>Book Appointments</li>
-                <li>Track History</li>
-                <li>Reviews</li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="font-semibold mb-4">Support</h3>
-              <ul className="space-y-2 text-gray-400">
-                <li>Help Center</li>
-                <li>Contact Us</li>
-                <li>Privacy Policy</li>
-                <li>Terms of Service</li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </footer>
+      <div className="mt-auto">
+        <Footer />
+      </div>
     </div>
   );
 };

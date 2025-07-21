@@ -80,15 +80,22 @@ function MapSync({ clinics, selectedClinicId }) {
   const map = useMap();
   useEffect(() => {
     const selected = clinics.find((c) => c.id === selectedClinicId);
-    if (selected) {
-      map.setView([selected.lat, selected.lng], 13, { animate: true });
+    if (selected && typeof selected.lat === 'number' && typeof selected.long === 'number') {
+      map.setView([selected.lat, selected.long], 13, { animate: true });
     }
   }, [selectedClinicId, clinics, map]);
   return null;
 }
 
 const ClinicMap = ({ clinics, selectedClinicId, onMarkerClick, blurredClinicIds = [] }) => {
-  const initial = clinics[0] || { lat: 20.5937, lng: 78.9629 };
+  // Only use clinics with valid lat/long numbers for markers
+  const validClinics = clinics.filter(
+    clinic => typeof clinic.lat === 'number' && !isNaN(clinic.lat) && typeof clinic.long === 'number' && !isNaN(clinic.long)
+  );
+  // Use 'long' for longitude everywhere
+  const initial = validClinics.length > 0
+    ? { lat: validClinics[0].lat, long: validClinics[0].long }
+    : { lat: 20.5937, long: 78.9629 };
   const [userLocation, setUserLocation] = useState(null);
   const [locating, setLocating] = useState(false);
   const mapRef = useRef();
@@ -126,11 +133,11 @@ const ClinicMap = ({ clinics, selectedClinicId, onMarkerClick, blurredClinicIds 
         mapRef.current.removeLayer(layer);
       }
     });
-    clinics.forEach((clinic) => {
-      if (clinic.lat && clinic.lng) {
+    validClinics.forEach((clinic) => {
+      if (clinic.lat && clinic.long) {
         const isBlurred = blurredClinicIds.includes(clinic.id);
         const markerIcon = clinic.verified ? greenIcon : redIcon;
-        const marker = L.marker([clinic.lat, clinic.lng], { icon: markerIcon })
+        const marker = L.marker([clinic.lat, clinic.long], { icon: markerIcon })
           .addTo(mapRef.current)
           .on("click", () => {
             if (isBlurred) {
@@ -150,15 +157,15 @@ const ClinicMap = ({ clinics, selectedClinicId, onMarkerClick, blurredClinicIds 
         .addTo(mapRef.current)
         .bindPopup("You are here");
     }
-  }, [clinics, selectedClinicId, onMarkerClick, blurredClinicIds, userLocation]);
+  }, [validClinics, selectedClinicId, onMarkerClick, blurredClinicIds, userLocation]);
 
   return (
-    <div className="w-full h-full rounded-lg overflow-hidden border shadow-md relative">
+    <div className="w-full h-[250px] md:h-full rounded-lg overflow-hidden border shadow-md relative">
       <MapContainer
-        center={[initial.lat, initial.lng]}
+        center={[initial.lat, initial.long]}
         zoom={12}
         scrollWheelZoom={true}
-        className="w-full h-full min-h-[300px] md:min-h-[400px]"
+        className="w-full h-full min-h-[250px] md:min-h-[400px]"
         style={{ height: "100%", width: "100%" }}
       >
         <SetMapRef />
@@ -166,10 +173,10 @@ const ClinicMap = ({ clinics, selectedClinicId, onMarkerClick, blurredClinicIds 
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
-        {clinics.map((clinic) => (
+        {validClinics.filter(clinic => !blurredClinicIds.includes(clinic.id)).map((clinic) => (
           <Marker
             key={clinic.id}
-            position={[clinic.lat, clinic.lng]}
+            position={[clinic.lat, clinic.long]}
             icon={clinic.verified ? verifiedIcon : defaultIcon}
             eventHandlers={{
               click: () => onMarkerClick(clinic.id),
@@ -177,26 +184,16 @@ const ClinicMap = ({ clinics, selectedClinicId, onMarkerClick, blurredClinicIds 
           >
             <Popup minWidth={240} maxWidth={320}>
               <div className="flex flex-col items-center gap-2 p-1">
-                <img
-                  src={clinic.image || "/placeholder.jpg"}
-                  alt={clinic.name}
-                  className="w-32 h-20 object-cover rounded-md border mb-1"
-                />
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 mb-1">
                   <span className="font-semibold text-base text-slate-800 text-center">{clinic.name}</span>
                   {clinic.verified && <FaCheckCircle className="text-green-500" title="Verified" />}
                 </div>
-                <div className="flex flex-col gap-1 w-full text-xs text-slate-600">
+                <div className="flex flex-col gap-1 w-full text-xs text-slate-600 mb-1">
                   <span className="flex items-center gap-1"><FaMapMarkerAlt /> {clinic.address}</span>
                   <span className="flex items-center gap-1"><FaPhone /> {clinic.phone}</span>
-                  <span className="flex items-center gap-1"><FaEnvelope /> <a href={`mailto:${clinic.email}`} className="hover:underline">{clinic.email}</a></span>
-                  <span className="flex items-center gap-1"><FaGlobe /> <a href={clinic.website} target="_blank" rel="noopener noreferrer" className="hover:underline">Website</a></span>
-                  <span className="flex items-center gap-1"><FaUserMd /> {clinic.surgeon}</span>
-                </div>
-                <div className="flex flex-wrap gap-1 mt-1 w-full">
-                  {clinic.services && clinic.services.map((service, idx) => (
-                    <span key={idx} className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full text-xs font-medium">{service}</span>
-                  ))}
+                  {clinic.gmapLink && (
+                    <span className="flex items-center gap-1"><a href={clinic.gmapLink} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">View on Google Maps</a></span>
+                  )}
                 </div>
               </div>
             </Popup>

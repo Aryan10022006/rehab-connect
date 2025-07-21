@@ -1,7 +1,7 @@
 import React from "react";
 import { FaSearch } from "react-icons/fa";
 
-const Filters = ({ search, setSearch, distance, setDistance, surgeon, setSurgeon, service, setService, surgeons, services, distances, onClear }) => {
+const Filters = ({ search, setSearch, distance, setDistance, surgeon, setSurgeon, service, setService, surgeons, services, distances, onClear, minRating, setMinRating, verifiedOnly, setVerifiedOnly, operationalOnly, setOperationalOnly }) => {
   return (
     <div className="w-full max-w-2xl mx-auto flex flex-col gap-3 p-4 bg-white rounded-xl shadow-lg mb-4 border border-slate-100">
       {/* Top Row: Search Bar and Button */}
@@ -67,6 +67,44 @@ const Filters = ({ search, setSearch, distance, setDistance, surgeon, setSurgeon
         >
           Clear Filters
         </button>
+      </div>
+      {/* Third Row: Advanced Filters */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-2 w-full mt-2">
+        <div className="flex items-center gap-2">
+          <label className="font-medium text-sm">Min Rating:</label>
+          <select
+            value={minRating}
+            onChange={e => setMinRating(Number(e.target.value))}
+            className="border rounded px-2 py-1 text-sm bg-white"
+          >
+            <option value={0}>Any</option>
+            <option value={1}>1+</option>
+            <option value={2}>2+</option>
+            <option value={3}>3+</option>
+            <option value={4}>4+</option>
+            <option value={5}>5</option>
+          </select>
+        </div>
+        <div className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            id="verifiedOnly"
+            checked={verifiedOnly}
+            onChange={e => setVerifiedOnly(e.target.checked)}
+            className="accent-blue-600"
+          />
+          <label htmlFor="verifiedOnly" className="font-medium text-sm">Verified Only</label>
+        </div>
+        <div className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            id="operationalOnly"
+            checked={operationalOnly}
+            onChange={e => setOperationalOnly(e.target.checked)}
+            className="accent-blue-600"
+          />
+          <label htmlFor="operationalOnly" className="font-medium text-sm">Operational Only</label>
+        </div>
       </div>
     </div>
   );

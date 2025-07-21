@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { getApiUrl, debugFetch, fetchWithAuth } from "../utils/api";
 import { FaUserCircle, FaHistory, FaMapMarkerAlt, FaStar, FaHeart, FaSearch, FaCalendarAlt, FaChartLine } from "react-icons/fa";
 import ClinicCard from "../components/ClinicCard";
 
@@ -14,21 +15,47 @@ const UserPortal = () => {
     favoritesClinics: 0,
     averageRating: 0
   });
+  // User profile fields
+  const [profile, setProfile] = useState({ address: '', phone: '', gender: '', name: '', email: '' });
+  const [profileLoading, setProfileLoading] = useState(false);
+  const [profileSuccess, setProfileSuccess] = useState('');
+  const [profileError, setProfileError] = useState('');
+  const [showProfileEdit, setShowProfileEdit] = useState(false);
+  const [clinicDetailsMap, setClinicDetailsMap] = useState({});
+  const [favorites, setFavorites] = useState([]);
+  const [myReviews, setMyReviews] = useState([]);
 
   useEffect(() => {
-    // Fetch user's recent clinics and stats
     fetchUserData();
+    fetchUserProfile();
+    fetchFavorites();
+    fetchMyReviews();
   }, [user]);
 
   const fetchUserData = async () => {
     try {
       if (user?.token) {
-        const response = await fetch('/api/user/history', {
+        const response = await debugFetch(`${getApiUrl()}/user/history`, {
           headers: { 'Authorization': `Bearer ${user.token}` }
         });
         if (response.ok) {
           const history = await response.json();
           setRecentClinics(history);
+          // Fetch clinic names for recent clinics
+          const ids = history.map(h => h.clinicId);
+          if (ids.length > 0) {
+            const details = {};
+            await Promise.all(ids.map(async (id) => {
+              try {
+                const res = await debugFetch(`${getApiUrl()}/clinics/${id}`);
+                if (res.ok) {
+                  const data = await res.json();
+                  details[id] = data.name || id;
+                }
+              } catch {}
+            }));
+            setClinicDetailsMap(details);
+          }
           setUserStats({
             totalViews: history.length,
             favoritesClinics: 0, // To be implemented
@@ -41,6 +68,92 @@ const UserPortal = () => {
     }
   };
 
+  const fetchUserProfile = async () => {
+    if (!user?.token) return;
+    setProfileLoading(true);
+    setProfileError('');
+    try {
+      const res = await debugFetch(`${getApiUrl()}/user/profile`, {
+        headers: { 'Authorization': `Bearer ${user.token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setProfile({
+          address: data.address || '',
+          phone: data.phone || '',
+          gender: data.gender || '',
+          name: data.name || user.name || '',
+          email: data.email || user.email || ''
+        });
+      }
+    } catch {
+      setProfileError('Failed to load profile');
+    }
+    setProfileLoading(false);
+  };
+
+  const fetchFavorites = async () => {
+    if (!user?.token) return;
+    try {
+      const res = await fetchWithAuth(`${getApiUrl()}/user/favorites`);
+      if (res.ok) {
+        setFavorites(await res.json());
+      }
+    } catch {}
+  };
+
+  const fetchMyReviews = async () => {
+    if (!user?.token) return;
+    try {
+      const res = await fetchWithAuth(`${getApiUrl()}/user/my-reviews`);
+      if (res.ok) {
+        setMyReviews(await res.json());
+      }
+    } catch {}
+  };
+
+  const handleToggleFavorite = async (clinic) => {
+    if (!user?.token) return;
+    const isFav = favorites.some(f => f.id === clinic.id);
+    try {
+      const res = await debugFetch(`${getApiUrl()}/user/favorites`, {
+        method: isFav ? 'DELETE' : 'POST',
+        headers: { 'Authorization': `Bearer ${user.token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ clinicId: clinic.id })
+      });
+      if (res.ok) {
+        fetchFavorites();
+      }
+    } catch {}
+  };
+
+  const handleProfileChange = (e) => {
+    const { name, value } = e.target;
+    setProfile((p) => ({ ...p, [name]: value }));
+  };
+
+  const handleProfileSave = async (e) => {
+    e.preventDefault();
+    setProfileLoading(true);
+    setProfileError('');
+    setProfileSuccess('');
+    try {
+      const res = await debugFetch(`${getApiUrl()}/user/profile`, {
+        method: 'PUT',
+        headers: { 'Authorization': `Bearer ${user.token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify(profile)
+      });
+      if (res.ok) {
+        setProfileSuccess('Profile updated successfully!');
+      } else {
+        setProfileError('Failed to update profile');
+      }
+    } catch {
+      setProfileError('Failed to update profile');
+    }
+    setProfileLoading(false);
+  };
+
   const handleLogout = async () => {
     await logout();
     navigate("/");
@@ -50,7 +163,7 @@ const UserPortal = () => {
     { id: 'overview', label: 'Overview', icon: <FaChartLine /> },
     { id: 'history', label: 'Recent Views', icon: <FaHistory /> },
     { id: 'favorites', label: 'Favorites', icon: <FaHeart /> },
-    { id: 'appointments', label: 'Appointments', icon: <FaCalendarAlt /> }
+    { id: 'myreviews', label: 'My Reviews', icon: <FaStar /> },
   ];
 
   const QuickStats = () => (
@@ -106,13 +219,6 @@ const UserPortal = () => {
               <FaHistory className="text-gray-600" />
               <span className="font-medium">View History</span>
             </button>
-            <button 
-              onClick={() => setActiveTab('appointments')}
-              className="w-full flex items-center gap-3 p-3 bg-green-50 hover:bg-green-100 rounded-lg transition"
-            >
-              <FaCalendarAlt className="text-green-600" />
-              <span className="font-medium">Appointments</span>
-            </button>
           </div>
         </div>
         <div className="bg-white rounded-xl shadow-sm border p-6">
@@ -123,7 +229,8 @@ const UserPortal = () => {
                 <FaMapMarkerAlt className="text-blue-600" />
                 <div className="flex-1">
                   <p className="font-medium text-sm">Viewed clinic</p>
-                  <p className="text-xs text-gray-500">ID: {clinic.clinicId}</p>
+                  <p className="text-xs text-gray-500">{clinicDetailsMap[clinic.clinicId] || clinic.clinicId}</p>
+                  <p className="text-xs text-gray-400">Viewed: {clinic.viewedAt ? new Date(clinic.viewedAt.seconds ? clinic.viewedAt.seconds * 1000 : clinic.viewedAt).toLocaleString() : ''}</p>
                 </div>
               </div>
             ))}
@@ -156,10 +263,8 @@ const UserPortal = () => {
             <div key={index} className="border rounded-lg p-4 hover:bg-gray-50 transition">
               <div className="flex justify-between items-center">
                 <div>
-                  <p className="font-medium">Clinic ID: {item.clinicId}</p>
-                  <p className="text-sm text-gray-500">
-                    Viewed: {new Date(item.viewedAt?.seconds * 1000).toLocaleDateString()}
-                  </p>
+                  <p className="font-medium">{clinicDetailsMap[item.clinicId] || item.clinicId}</p>
+                  <p className="text-xs text-gray-400">Viewed: {item.viewedAt ? new Date(item.viewedAt.seconds ? item.viewedAt.seconds * 1000 : item.viewedAt).toLocaleString() : ''}</p>
                 </div>
                 <button 
                   onClick={() => navigate(`/clinic/${item.clinicId}`)}
@@ -178,16 +283,24 @@ const UserPortal = () => {
   const FavoritesTab = () => (
     <div className="bg-white rounded-xl shadow-sm border p-6">
       <h3 className="text-lg font-semibold mb-4">Favorite Clinics</h3>
-      <div className="text-center py-8">
-        <FaHeart className="text-4xl text-gray-300 mx-auto mb-4" />
-        <p className="text-gray-500">No favorite clinics yet</p>
-        <button 
-          onClick={() => navigate('/clinics')}
-          className="mt-4 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
-        >
-          Find Clinics
-        </button>
-      </div>
+      {favorites.length === 0 ? (
+        <div className="text-center py-8">
+          <FaHeart className="text-4xl text-gray-300 mx-auto mb-4" />
+          <p className="text-gray-500">No favorite clinics yet</p>
+          <button 
+            onClick={() => navigate('/clinics')}
+            className="mt-4 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
+          >
+            Find Clinics
+          </button>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {favorites.map((clinic) => (
+            <ClinicCard key={clinic.id} clinic={clinic} locked={false} isFavorite={true} onFavorite={handleToggleFavorite} />
+          ))}
+        </div>
+      )}
     </div>
   );
 
@@ -207,6 +320,31 @@ const UserPortal = () => {
     </div>
   );
 
+  const MyReviewsTab = () => (
+    <div className="bg-white rounded-xl shadow-sm border p-6">
+      <h3 className="text-lg font-semibold mb-4">My Reviews</h3>
+      {myReviews.length === 0 ? (
+        <div className="text-center py-8 text-gray-500">No reviews submitted yet.</div>
+      ) : (
+        <div className="space-y-4">
+          {myReviews.map((r, idx) => (
+            <div key={r.id || idx} className={`border rounded-lg p-4 bg-slate-50 ${r.flagged ? 'border-red-400 bg-red-50' : ''}`}>
+              <div className="font-bold text-blue-800 mb-1">{r.clinicName || r.clinicId}</div>
+              <div className="text-sm text-slate-700 mb-1">{r.text}</div>
+              <div className="text-xs text-slate-500 mb-1">{r.createdAt ? new Date(r.createdAt).toLocaleString() : ''}</div>
+              {r.reply && (
+                <div className="mt-2 p-2 bg-blue-50 border-l-4 border-blue-400 rounded">
+                  <span className="font-semibold text-blue-700">Clinic Reply:</span> <span className="text-blue-800">{r.reply}</span>
+                </div>
+              )}
+              {r.flagged && <div className="text-xs text-red-600 mt-1">This review has been flagged as inappropriate.</div>}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -219,9 +357,9 @@ const UserPortal = () => {
               </div>
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">
-                  Welcome back, {user?.name || 'User'}!
+                  Welcome back, {user?.name || profile.name || 'User'}!
                 </h1>
-                <p className="text-gray-600">{user?.email}</p>
+                <p className="text-gray-600">{user?.email || profile.email}</p>
               </div>
             </div>
             <div className="flex gap-3">
@@ -239,6 +377,45 @@ const UserPortal = () => {
               </button>
             </div>
           </div>
+          {/* Editable Profile Fields only on button click */}
+          {!showProfileEdit && (
+            <button onClick={() => setShowProfileEdit(true)} className="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-700 font-semibold">Update Profile</button>
+          )}
+          {showProfileEdit && (
+            <form onSubmit={handleProfileSave} className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="flex flex-col">
+                <label className="font-semibold mb-1">Name</label>
+                <input type="text" name="name" value={profile.name} onChange={handleProfileChange} className="border rounded px-3 py-2" required />
+              </div>
+              <div className="flex flex-col">
+                <label className="font-semibold mb-1">Email</label>
+                <input type="email" name="email" value={profile.email} onChange={handleProfileChange} className="border rounded px-3 py-2" required disabled />
+              </div>
+              <div className="flex flex-col">
+                <label className="font-semibold mb-1">Phone</label>
+                <input type="tel" name="phone" value={profile.phone} onChange={handleProfileChange} className="border rounded px-3 py-2" />
+              </div>
+              <div className="flex flex-col">
+                <label className="font-semibold mb-1">Gender</label>
+                <select name="gender" value={profile.gender} onChange={handleProfileChange} className="border rounded px-3 py-2">
+                  <option value="">Select</option>
+                  <option value="male">Male</option>
+                  <option value="female">Female</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+              <div className="flex flex-col md:col-span-2">
+                <label className="font-semibold mb-1">Address</label>
+                <input type="text" name="address" value={profile.address} onChange={handleProfileChange} className="border rounded px-3 py-2" />
+              </div>
+              <div className="md:col-span-2 flex gap-4 items-center">
+                <button type="submit" className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 font-semibold" disabled={profileLoading}>{profileLoading ? 'Saving...' : 'Save Profile'}</button>
+                <button type="button" className="bg-gray-300 text-gray-800 px-6 py-2 rounded hover:bg-gray-400 font-semibold" onClick={() => setShowProfileEdit(false)} disabled={profileLoading}>Cancel</button>
+                {profileSuccess && <span className="text-green-600 font-medium">{profileSuccess}</span>}
+                {profileError && <span className="text-red-600 font-medium">{profileError}</span>}
+              </div>
+            </form>
+          )}
         </div>
 
         {/* Tabs */}
@@ -265,7 +442,7 @@ const UserPortal = () => {
             {activeTab === 'overview' && <OverviewTab />}
             {activeTab === 'history' && <HistoryTab />}
             {activeTab === 'favorites' && <FavoritesTab />}
-            {activeTab === 'appointments' && <AppointmentsTab />}
+            {activeTab === 'myreviews' && <MyReviewsTab />}
           </div>
         </div>
       </div>

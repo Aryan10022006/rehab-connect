@@ -31,6 +31,14 @@ export function AuthProvider({ children }) {
     return now - Number(sessionStart) > SESSION_DURATION;
   };
 
+  // Helper to get sanitized API base URL
+  const getApiUrl = () => {
+    let url = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000/api';
+    // Remove trailing slash if present
+    if (url.endsWith('/')) url = url.slice(0, -1);
+    return url;
+  };
+
   // Listen for auth state changes
   useEffect(() => {
     console.log('Setting up Firebase auth listener...');
@@ -53,7 +61,7 @@ export function AuthProvider({ children }) {
           console.log('Got Firebase token, verifying with backend...');
           
           // Verify with backend
-          const apiUrl = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000/api';
+          const apiUrl = getApiUrl();
           const response = await fetch(`${apiUrl}/auth/verify`, {
             method: 'POST',
             headers: {
