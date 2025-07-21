@@ -1,24 +1,33 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-// Admin credentials from env: {"admin1@email.com":"password1",...}
-const ADMIN_USERS = process.env.REACT_APP_ADMIN_USERS ? JSON.parse(process.env.REACT_APP_ADMIN_USERS) : {};
-
 const AdminLoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (ADMIN_USERS[email] && ADMIN_USERS[email] === password) {
-      localStorage.setItem("admin", "true");
-      localStorage.setItem("admin_email", email);
-      localStorage.setItem("admin_login_time", Date.now().toString());
-      navigate("/admin");
-    } else {
-      setError("Invalid credentials");
+    setError("");
+    try {
+      const apiUrl = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000';
+      const response = await fetch(`${apiUrl}/api/admin/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      const data = await response.json();
+      if (response.ok && data.success) {
+        localStorage.setItem("admin", "true");
+        localStorage.setItem("admin_email", email);
+        localStorage.setItem("admin_login_time", Date.now().toString());
+        navigate("/admin");
+      } else {
+        setError(data.error || "Invalid credentials");
+      }
+    } catch (err) {
+      setError("Server error. Please try again later.");
     }
   };
 

@@ -209,4 +209,20 @@ app.get('/api/admin/analytics', verifyFirebaseToken, verifyAdmin, async (req, re
   }
 });
 
+// Admin login endpoint (no Firebase, just backend env)
+app.post('/api/admin/login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    const adminUsers = process.env.ADMIN_USERS ? JSON.parse(process.env.ADMIN_USERS) : {};
+    if (adminUsers[email] && adminUsers[email] === password) {
+      // For demo: return a simple session token (in production, use JWT or session)
+      return res.json({ success: true, email });
+    } else {
+      return res.status(401).json({ success: false, error: 'Invalid credentials' });
+    }
+  } catch (error) {
+    return res.status(500).json({ success: false, error: 'Server error' });
+  }
+});
+
 app.listen(PORT, () => console.log(`Backend running on http://localhost:${PORT}`)); 
