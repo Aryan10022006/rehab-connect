@@ -180,11 +180,12 @@ const ClinicsManagement = () => {
           // Send to backend for bulk upload
           const apiUrl = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000';
           const adminEmail = localStorage.getItem("admin_email");
+          // For now, use admin_email as a pseudo-token. In production, use a real JWT/session token.
           const response = await fetch(`${apiUrl}/api/clinics/bulk`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              // Optionally add admin auth if needed
+              'Authorization': `Bearer ${adminEmail}`
             },
             body: JSON.stringify(clinicsToUpload)
           });
