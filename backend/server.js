@@ -448,14 +448,41 @@ app.post('/api/clinics/optimized', async (req, res) => {
     const allClinics = await getClinics();
     let filteredClinics = [];
     
-    // Apply pincode-based filtering first (OPTIMIZATION)
+    // Apply precise pincode-based filtering first (OPTIMIZATION)
     if (pincode || nearbyPincodes.length > 0) {
       const targetPincodes = [pincode, ...nearbyPincodes].filter(Boolean);
       
       filteredClinics = allClinics.filter(clinic => {
-        return targetPincodes.some(pin => 
-          clinic.pincode && clinic.pincode.toString().startsWith(pin.toString().substring(0, 3))
-        );
+        // Priority 1: Exact pincode match
+        if (clinic.pincode && targetPincodes.includes(clinic.pincode.toString())) {
+          return true;
+        }
+        
+        // Priority 2: Address contains pincode
+        if (clinic.address && targetPincodes.some(pin => clinic.address.includes(pin))) {
+          return true;
+        }
+        
+        // Priority 3: Location contains pincode
+        if (clinic.location && targetPincodes.some(pin => clinic.location.includes(pin))) {
+          return true;
+        }
+        
+        // Priority 4: Only for 6-digit Indian pincodes - same postal circle/area
+        if (pincode && pincode.length === 6 && clinic.pincode && clinic.pincode.length === 6) {
+          const clinicPincode = clinic.pincode.toString();
+          const searchPincode = pincode.toString();
+          
+          // Same postal circle (first 2 digits)
+          if (clinicPincode.substring(0, 2) === searchPincode.substring(0, 2)) {
+            // Same sub-division (first 3 digits) for relevance
+            if (clinicPincode.substring(0, 3) === searchPincode.substring(0, 3)) {
+              return true;
+            }
+          }
+        }
+        
+        return false;
       });
       
       logger.info(`Pincode filtering: ${allClinics.length} → ${filteredClinics.length} clinics`);
@@ -750,6 +777,94 @@ app.get('/api/clinics/search', async (req, res) => {
       error: 'Search failed', 
       details: error.message,
       searchTime: Date.now() - startTime
+    });
+  }
+});
+
+// Precision Pincode Search - Professional endpoint for exact pincode matching
+app.get('/api/clinics/pincode/:pincode', async (req, res) => {
+  try {
+    const { pincode } = req.params;
+    const { limit = 20 } = req.query;
+    
+    logger.info(`🎯 Precision pincode search for: ${pincode}`);
+    
+    if (!pincode || pincode.length < 3) {
+      return res.status(400).json({ 
+        error: 'Invalid pincode. Minimum 3 digits required.',
+        received: pincode
+      });
+    }
+    
+    // Get all clinics
+    const allClinics = await getClinics();
+    const searchPincode = pincode.toString();
+    
+    // Professional matching with priorities
+    const exactMatches = [];
+    const addressMatches = [];
+    const locationMatches = [];
+    const nearbyMatches = [];
+    
+    allClinics.forEach(clinic => {
+      const clinicPincode = clinic.pincode?.toString() || '';
+      
+      // Priority 1: Exact pincode match
+      if (clinicPincode === searchPincode) {
+        exactMatches.push(clinic);
+        return;
+      }
+      
+      // Priority 2: Address contains pincode
+      if (clinic.address?.includes(searchPincode)) {
+        addressMatches.push(clinic);
+        return;
+      }
+      
+      // Priority 3: Location contains pincode
+      if (clinic.location?.includes(searchPincode)) {
+        locationMatches.push(clinic);
+        return;
+      }
+      
+      // Priority 4: Nearby pincodes (only for valid 6-digit Indian pincodes)
+      if (searchPincode.length === 6 && clinicPincode.length === 6) {
+        // Same postal subdivision (first 3 digits)
+        if (clinicPincode.substring(0, 3) === searchPincode.substring(0, 3)) {
+          nearbyMatches.push(clinic);
+        }
+      }
+    });
+    
+    // Combine results in priority order
+    const results = [
+      ...exactMatches,
+      ...addressMatches, 
+      ...locationMatches,
+      ...nearbyMatches
+    ].slice(0, parseInt(limit));
+    
+    logger.info(`🎯 Pincode search results: ${exactMatches.length} exact, ${addressMatches.length} address, ${locationMatches.length} location, ${nearbyMatches.length} nearby = ${results.length} total`);
+    
+    res.json({
+      success: true,
+      pincode: searchPincode,
+      results,
+      meta: {
+        exactMatches: exactMatches.length,
+        addressMatches: addressMatches.length,
+        locationMatches: locationMatches.length,
+        nearbyMatches: nearbyMatches.length,
+        totalResults: results.length,
+        strategy: 'PRECISION_PINCODE'
+      }
+    });
+    
+  } catch (error) {
+    logger.error('Precision pincode search error:', error);
+    res.status(500).json({ 
+      error: 'Failed to search by pincode',
+      details: error.message 
     });
   }
 });

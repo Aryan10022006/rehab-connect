@@ -92,39 +92,73 @@ class OptimizedFirebaseService {
   async searchPincodeClientSide(pincode, isPremium = false, limit = null, cacheKey) {
     try {
       // Get all clinics from cache or fetch
-      const allClinics = await this.getAllClinics();
+      console.log(`🔍 Getting clinics for pincode search...`);
+      const allClinics = await this.getOptimizedClinics();
+      console.log(`📊 Retrieved ${allClinics?.length || 0} clinics for pincode search`);
       
-      // Enhanced pincode matching logic - NO distance filtering
+      if (!allClinics || allClinics.length === 0) {
+        console.warn('❌ No clinics available for pincode search');
+        return {
+          success: false,
+          clinics: [],
+          total: 0,
+          error: 'No clinic data available',
+          searchType: 'pincode',
+          pincode,
+          source: 'client-side'
+        };
+      }
+
+      // Professional pincode search - Precision-focused matching
+      console.log(`🔍 Starting precise pincode search for "${pincode}" in ${allClinics.length} clinics`);
+      
       const matchingClinics = allClinics.filter(clinic => {
         const clinicPincode = clinic.pincode?.toString() || '';
         const searchPincode = pincode.toString();
         
-        // Exact match - highest priority
-        if (clinicPincode === searchPincode) return true;
-        
-        // Location contains pincode
-        if (clinic.location?.toLowerCase().includes(searchPincode)) return true;
-        
-        // Address contains pincode
-        if (clinic.address?.toLowerCase().includes(searchPincode)) return true;
-        
-        // Area code match (first 3 digits)
-        if (clinicPincode.length >= 3 && searchPincode.length >= 3) {
-          const clinicArea = clinicPincode.substring(0, 3);
-          const searchArea = searchPincode.substring(0, 3);
-          if (clinicArea === searchArea) return true;
+        // Priority 1: Exact pincode match (highest precision)
+        if (clinicPincode === searchPincode) {
+          console.log(`✅ EXACT match: ${clinic.name} (${clinicPincode})`);
+          return true;
         }
         
-        // Partial pincode match for flexible search
-        if (searchPincode.length >= 4) {
-          if (clinicPincode.startsWith(searchPincode) || 
-              searchPincode.startsWith(clinicPincode.substring(0, 4))) {
-            return true;
+        // Priority 2: Address field contains exact pincode
+        if (clinic.address && clinic.address.includes(searchPincode)) {
+          console.log(`🏠 ADDRESS match: ${clinic.name} (address contains ${searchPincode})`);
+          return true;
+        }
+        
+        // Priority 3: Location field contains exact pincode  
+        if (clinic.location && clinic.location.includes(searchPincode)) {
+          console.log(`📍 LOCATION match: ${clinic.name} (location contains ${searchPincode})`);
+          return true;
+        }
+        
+        // Priority 4: Only show nearby pincodes if search is 6 digits (valid Indian pincode)
+        if (searchPincode.length === 6 && clinicPincode.length === 6) {
+          // Match same postal circle (first 2 digits) for relevant results
+          const clinicPostalCircle = clinicPincode.substring(0, 2);
+          const searchPostalCircle = searchPincode.substring(0, 2);
+          
+          if (clinicPostalCircle === searchPostalCircle) {
+            // Further check - same sub-division (first 3 digits)
+            const clinicSubDivision = clinicPincode.substring(0, 3);
+            const searchSubDivision = searchPincode.substring(0, 3);
+            
+            if (clinicSubDivision === searchSubDivision) {
+              console.log(`🌍 NEARBY match: ${clinic.name} (${clinicPincode} - same area ${clinicSubDivision})`);
+              return true;
+            }
           }
         }
         
         return false;
       });
+
+      console.log(`🔍 Search complete: ${matchingClinics.length} matches found for pincode "${pincode}"`);
+      if (matchingClinics.length > 0) {
+        console.log('✅ Matching clinics:', matchingClinics.map(c => `${c.name} (${c.pincode})`));
+      }
 
       // Smart sorting by relevance (NOT by distance)
       const sortedClinics = matchingClinics.sort((a, b) => {

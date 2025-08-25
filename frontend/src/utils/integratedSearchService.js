@@ -156,35 +156,64 @@ export class IntegratedSearchService {
   }
 
   /**
-   * Pincode search - Independent of location/distance
+   * Pincode search - Precision-focused with professional matching
    */
   async _pincodeSearch(pincode, isPremium, useGoogleMaps, maxResults) {
-    // Use Firebase service for pincode search (independent of location/distance)
     try {
-      const result = await this.firebaseService.searchByPincode(pincode, isPremium, maxResults);
+      // Use the new precision pincode endpoint
+      const response = await fetch(`${this.baseURL}/api/clinics/pincode/${pincode}?limit=${maxResults || 20}`);
       
-      // For pincode search, we DON'T add distance calculations
-      // Pincode search is location-independent and sorted by relevance
-      console.log(`📍 Pincode search completed for ${pincode}: ${result.clinics?.length || 0} results`);
+      if (!response.ok) {
+        throw new Error(`Precision pincode search failed: ${response.status}`);
+      }
       
-      return {
-        ...result,
-        searchType: 'pincode',
-        enhanced: false, // No distance enhancement needed for pincode search
-        source: result.source || 'firebase',
-        pincode
-      };
+      const result = await response.json();
+      
+      if (result.success) {
+        console.log(`🎯 Precision pincode search for ${pincode}: ${result.results.length} results (${result.meta.exactMatches} exact, ${result.meta.addressMatches} address, ${result.meta.locationMatches} location, ${result.meta.nearbyMatches} nearby)`);
+        
+        return {
+          success: true,
+          clinics: result.results,
+          total: result.results.length,
+          searchType: 'precision-pincode',
+          meta: result.meta,
+          pincode
+        };
+      } else {
+        throw new Error('No results from precision search');
+      }
       
     } catch (error) {
-      console.error(`Pincode search failed for ${pincode}:`, error);
-      return {
-        success: false,
-        clinics: [],
-        total: 0,
-        searchType: 'pincode',
-        error: error.message,
-        pincode
-      };
+      console.log('Precision pincode search failed, using Firebase fallback:', error.message);
+      
+      try {
+        // Fallback to Firebase service
+        const result = await this.firebaseService.searchByPincode(pincode, isPremium, maxResults);
+        
+        // For pincode search, we DON'T add distance calculations
+        // Pincode search is location-independent and sorted by relevance
+        console.log(`📍 Fallback pincode search for ${pincode}: ${result.clinics?.length || 0} results`);
+        
+        return {
+          ...result,
+          searchType: 'pincode',
+          enhanced: false, // No distance enhancement needed for pincode search
+          source: result.source || 'firebase',
+          pincode
+        };
+        
+      } catch (fallbackError) {
+        console.error(`All pincode search methods failed for ${pincode}:`, fallbackError);
+        return {
+          success: false,
+          clinics: [],
+          total: 0,
+          searchType: 'pincode',
+          error: fallbackError.message,
+          pincode
+        };
+      }
     }
   }
 

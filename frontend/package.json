@@ -6,6 +6,7 @@
     "@headlessui/react": "^2.2.4",
     "@react-oauth/google": "^0.12.2",
     "@stripe/stripe-js": "^2.4.0",
+    "@tanstack/react-query": "^5.59.0",
     "@testing-library/dom": "^10.4.0",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.3.0",
@@ -25,23 +26,20 @@
     "react-icons": "^5.5.0",
     "react-intersection-observer": "^9.5.3",
     "react-leaflet": "^5.0.0",
-    "react-query": "^3.39.3",
     "react-responsive": "^10.0.1",
-    "react-router-dom": "^7.6.3",
+    "react-router-dom": "^6.26.2",
     "react-scripts": "^5.0.1",
     "recharts": "^2.9.0",
     "tailwindcss": "^3.4.3",
-    "web-vitals": "^2.1.4",
-    "workbox-webpack-plugin": "^7.0.0"
+    "web-vitals": "^2.1.4"
   },
   "scripts": {
     "start": "react-scripts start",
-    "build": "react-scripts build && npm run generate-sw",
+    "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "start:backend": "node backend/server-optimized.js",
     "analyze": "npm run build && npx webpack-bundle-analyzer build/static/js/*.js",
-    "generate-sw": "workbox generateSW workbox-config.js",
     "lint": "eslint src --ext .js,.jsx",
     "lint:fix": "eslint src --ext .js,.jsx --fix"
   },
@@ -63,8 +61,5 @@
       "last 1 safari version"
     ]
   },
-  "proxy": "http://localhost:5000",
-  "devDependencies": {
-    "workbox-cli": "^7.3.0"
-  }
+  "proxy": "http://localhost:5000"
 }
