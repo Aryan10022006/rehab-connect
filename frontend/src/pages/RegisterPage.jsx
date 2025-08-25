@@ -46,7 +46,7 @@ const RegisterPage = () => {
     
     if (result.success) {
       localStorage.setItem('user_session_start', Date.now().toString());
-      navigate('/user');
+      navigate('/dashboard');
     } else {
       setError(result.message);
     }

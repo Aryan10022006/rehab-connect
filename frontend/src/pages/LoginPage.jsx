@@ -53,12 +53,12 @@ const LoginPage = () => {
       setSuccess('Successfully signed in with Google! Redirecting to dashboard...');
       // Show success message and redirect to dashboard
       setTimeout(() => {
-        navigate('/user');
-      }, 1500);
+        navigate('/dashboard');
+      }, 1000); // Reduced timeout for better UX
     } else {
       setError(result.message);
-      setGoogleLoading(false);
     }
+    setGoogleLoading(false);
   };
 
   return (

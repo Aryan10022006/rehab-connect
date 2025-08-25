@@ -20,7 +20,7 @@ class OptimizedFirebaseService {
            (Date.now() - this.cache.lastFetch) < this.cache.cacheDuration;
   }
 
-  // Get optimized clinic data with smart caching
+  // Get optimized clinic data with robust fallback
   async getOptimizedClinics(forceRefresh = false) {
     // Return cached data if valid
     if (!forceRefresh && this.isCacheValid()) {
@@ -28,23 +28,69 @@ class OptimizedFirebaseService {
       return this.cache.clinics;
     }
 
+    // Try multiple data sources
     try {
+      // Method 1: Try API endpoint
+      console.log('🌐 Trying API endpoint...');
       const response = await fetch(`${this.API_BASE}/clinics/optimized`);
-      if (!response.ok) throw new Error('Failed to fetch clinics');
-      
-      const data = await response.json();
-      
-      // Update cache
-      this.cache.clinics = data.clinics || [];
-      this.cache.lastFetch = Date.now();
-      
-      console.log(`📥 Fetched ${this.cache.clinics.length} clinics from server`);
-      return this.cache.clinics;
+      if (response.ok) {
+        const data = await response.json();
+        if (data.clinics && data.clinics.length > 0) {
+          this.cache.clinics = data.clinics;
+          this.cache.lastFetch = Date.now();
+          console.log(`📥 Fetched ${this.cache.clinics.length} clinics from API`);
+          return this.cache.clinics;
+        }
+      }
     } catch (error) {
-      console.error('Error fetching optimized clinics:', error);
-      // Return cached data if available, even if expired
-      return this.cache.clinics || [];
+      console.warn('API endpoint failed:', error.message);
     }
+
+    // Method 2: Try direct Firebase
+    try {
+      console.log('🔥 Trying direct Firebase...');
+      const { collection, getDocs } = await import('firebase/firestore');
+      const { db } = await import('../config/firebase');
+      
+      const clinicsRef = collection(db, 'clinics');
+      const snapshot = await getDocs(clinicsRef);
+      
+      const clinics = [];
+      snapshot.forEach(doc => {
+        clinics.push({
+          id: doc.id,
+          ...doc.data()
+        });
+      });
+      
+      if (clinics.length > 0) {
+        this.cache.clinics = clinics;
+        this.cache.lastFetch = Date.now();
+        console.log(`� Fetched ${clinics.length} clinics from Firebase`);
+        return this.cache.clinics;
+      }
+    } catch (error) {
+      console.warn('Firebase direct access failed:', error.message);
+    }
+
+    // Method 3: Use local data as last resort
+    try {
+      console.log('📁 Trying local clinic data...');
+      const localClinics = await import('../data/clinics.json');
+      const clinics = localClinics.default || localClinics;
+      
+      if (clinics && clinics.length > 0) {
+        this.cache.clinics = clinics;
+        this.cache.lastFetch = Date.now();
+        console.log(`📁 Loaded ${clinics.length} clinics from local data`);
+        return this.cache.clinics;
+      }
+    } catch (error) {
+      console.warn('Local data access failed:', error.message);
+    }
+
+    console.error('❌ All clinic data sources failed');
+    return this.cache.clinics || [];
   }
 
   // Smart search by pincode with caching
