@@ -1,7 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaClinicMedical, FaUserMd, FaMapMarkerAlt, FaShieldAlt, FaStar, FaArrowRight, FaCheck, FaBars, FaTimes } from 'react-icons/fa';
-import Footer from '../components/Footer';
 
 const LandingPage = () => {
   const navigate = useNavigate();
@@ -207,9 +206,6 @@ const LandingPage = () => {
           </div>
         </div>
       </section>
-      <div className="mt-auto">
-        <Footer />
-      </div>
     </div>
   );
 };

@@ -60,31 +60,16 @@ function AppContent() {
     <div className="min-h-screen bg-gray-50 flex flex-col">
       <Routes>
         {/* Landing page - public */}
-        <Route path="/" element={
-          <>
-            <LandingPage />
-            <Footer />
-          </>
-        } />
+        <Route path="/" element={<LandingPage />} />
         
         {/* Auth routes - REDIRECT IF LOGGED IN */}
         <Route 
           path="/login" 
-          element={user ? <Navigate to="/dashboard" replace /> : 
-            <>
-              <LoginPage />
-              <Footer />
-            </>
-          } 
+          element={user ? <Navigate to="/dashboard" replace /> : <LoginPage />} 
         />
         <Route 
           path="/register" 
-          element={user ? <Navigate to="/dashboard" replace /> : 
-            <>
-              <RegisterPage />
-              <Footer />
-            </>
-          } 
+          element={user ? <Navigate to="/dashboard" replace /> : <RegisterPage />} 
         />
         
         {/* Public pages */}
@@ -92,7 +77,6 @@ function AppContent() {
           <>
             <Header />
             <ContactPage />
-            <Footer />
           </>
         } />
         
@@ -100,7 +84,6 @@ function AppContent() {
           <ErrorBoundary>
             <Header />
             <PricingPage />
-            <Footer />
           </ErrorBoundary>
         } />
         
@@ -112,7 +95,6 @@ function AppContent() {
               <ErrorBoundary>
                 <Header />
                 <HomePage />
-                <Footer />
               </ErrorBoundary>
             </ProtectedRoute>
           } 
@@ -126,7 +108,6 @@ function AppContent() {
               <ErrorBoundary>
                 <Header />
                 <HomePage />
-                <Footer />
               </ErrorBoundary>
             </ProtectedRoute>
           } 
@@ -139,7 +120,6 @@ function AppContent() {
               <ErrorBoundary>
                 <Header />
                 <UserPortal />
-                <Footer />
               </ErrorBoundary>
             </ProtectedRoute>
           } 
@@ -152,7 +132,6 @@ function AppContent() {
               <ErrorBoundary>
                 <Header />
                 <ClinicDetailPage />
-                <Footer />
               </ErrorBoundary>
             </ProtectedRoute>
           } 
@@ -174,6 +153,9 @@ function AppContent() {
         {/* Catch-all redirect */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+      
+      {/* Single Footer for entire app */}
+      <Footer />
     </div>
   );
 }

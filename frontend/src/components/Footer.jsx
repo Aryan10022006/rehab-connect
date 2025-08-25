@@ -22,26 +22,27 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           
           {/* Company Info */}
+          {/* Company Info */}
           <div className="space-y-4">
             <div className="flex items-center space-x-2">
               <img 
                 src="/robobionicslogo.png" 
-                alt="RehabConnect" 
+                alt="Robobionics" 
                 className="h-8 w-8"
                 onError={(e) => e.target.style.display = 'none'}
               />
-              <h3 className="text-xl font-bold text-blue-400">RehabConnect</h3>
+              <h3 className="text-xl font-bold">Robobionics</h3>
             </div>
             <p className="text-gray-300 text-sm leading-relaxed">
-              Your trusted platform for finding quality rehabilitation centers and healthcare providers across India.
+              <strong>Rehab Connect</strong> is an innovative initiative by Robobionics, 
+              revolutionizing rehabilitation healthcare through advanced technology and 
+              comprehensive digital solutions.
             </p>
             <div className="flex items-center space-x-2 text-sm text-gray-400">
               <FaShieldAlt className="text-green-400" />
-              <span>Verified Healthcare Network</span>
+              <span>Trusted Healthcare Technology</span>
             </div>
-          </div>
-
-          {/* Quick Links */}
+          </div>          {/* Quick Links */}
           <div className="space-y-4">
             <h4 className="text-lg font-semibold text-white">Quick Links</h4>
             <div className="space-y-2">
@@ -70,7 +71,7 @@ const Footer = () => {
               </div>
               <div className="flex items-center space-x-3 text-sm">
                 <FaEnvelope className="text-blue-400 flex-shrink-0" />
-                <span className="text-gray-300">support@rehabconnect.com</span>
+                <span className="text-gray-300">contact@robobionics.com</span>
               </div>
               <div className="flex items-center space-x-3 text-sm">
                 <FaMapMarkerAlt className="text-blue-400 flex-shrink-0" />
@@ -117,12 +118,12 @@ const Footer = () => {
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-2 md:space-y-0">
             <div className="flex items-center space-x-2 text-sm text-gray-400">
-              <span>© {currentYear} RehabConnect. Made with</span>
+              <span>© {currentYear} Robobionics. Made with</span>
               <FaHeart className="text-red-500 text-xs" />
-              <span>for better healthcare</span>
+              <span>for innovative healthcare solutions</span>
             </div>
             <div className="text-xs text-gray-500">
-              All rights reserved • Healthcare Technology Platform
+              Rehab Connect Initiative • Advanced Healthcare Technology
             </div>
           </div>
         </div>
