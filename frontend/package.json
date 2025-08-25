@@ -40,7 +40,7 @@
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "start:backend": "node backend/server-optimized.js",
-    "analyze": "npm run build && npx webpack-bundle-analyzer build/static/js/*.js",
+    "analyze": "npm run build; npx webpack-bundle-analyzer build/static/js/*.js",
     "lint": "eslint src --ext .js,.jsx",
     "lint:fix": "eslint src --ext .js,.jsx --fix"
   },
