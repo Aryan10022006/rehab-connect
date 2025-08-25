@@ -1,0 +1,795 @@
+/* Professional Clinic Detail Page Styles */
+.clinic-detail-page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* Loading States */
+.clinic-detail-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+}
+
+.loading-animation {
+  text-align: center;
+  color: #4a5568;
+}
+
+.loading-spinner {
+  width: 60px;
+  height: 60px;
+  border: 4px solid rgba(102, 126, 234, 0.2);
+  border-radius: 50%;
+  border-top-color: #667eea;
+  animation: spin 1s ease-in-out infinite;
+  margin: 0 auto 1rem;
+}
+
+/* Error States */
+.clinic-detail-error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  padding: 2rem;
+}
+
+.error-content {
+  text-align: center;
+  background: white;
+  padding: 3rem;
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  max-width: 500px;
+}
+
+.error-content h2 {
+  color: #e53e3e;
+  margin-bottom: 1rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.back-home-btn {
+  background: linear-gradient(45deg, #667eea, #764ba2);
+  color: white;
+  border: none;
+  padding: 0.75rem 2rem;
+  border-radius: 50px;
+  cursor: pointer;
+  font-weight: 600;
+  margin-top: 1rem;
+  transition: all 0.3s ease;
+}
+
+.back-home-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+}
+
+/* Hero Section */
+.clinic-hero {
+  background: white;
+  margin: 2rem;
+  border-radius: 24px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.hero-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  min-height: 500px;
+}
+
+.clinic-images {
+  position: relative;
+  background: #f8fafc;
+}
+
+.main-image {
+  position: relative;
+  height: 400px;
+  overflow: hidden;
+}
+
+.hero-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: all 0.6s ease;
+  opacity: 0;
+}
+
+.hero-image.loaded {
+  opacity: 1;
+}
+
+.hero-image.loading {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.placeholder-image {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #718096;
+  background: #f7fafc;
+}
+
+.placeholder-image span {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+}
+
+/* Image Navigation */
+.image-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(255, 255, 255, 0.9);
+  border: none;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #4a5568;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transition: all 0.2s ease;
+  z-index: 10;
+}
+
+.image-nav:hover {
+  background: white;
+  transform: translateY(-50%) scale(1.1);
+}
+
+.image-nav.prev {
+  left: 1rem;
+}
+
+.image-nav.next {
+  right: 1rem;
+}
+
+/* Thumbnail Gallery */
+.image-thumbnails {
+  display: flex;
+  gap: 0.5rem;
+  padding: 1rem;
+  overflow-x: auto;
+  background: white;
+}
+
+.thumbnail {
+  width: 80px;
+  height: 60px;
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.thumbnail:hover {
+  border-color: #667eea;
+  transform: scale(1.05);
+}
+
+.thumbnail.active {
+  border-color: #667eea;
+  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+}
+
+.thumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.thumbnail-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  background: #f7fafc;
+  color: #a0aec0;
+  font-size: 1.5rem;
+}
+
+/* Clinic Basic Info */
+.clinic-basic-info {
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background: white;
+}
+
+.clinic-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1.5rem;
+}
+
+.clinic-header h1 {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #2d3748;
+  margin: 0;
+  line-height: 1.2;
+  flex: 1;
+  margin-right: 1rem;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.favorite-btn {
+  background: none;
+  border: 2px solid #e2e8f0;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 1.5rem;
+  transition: all 0.2s ease;
+  color: #718096;
+}
+
+.favorite-btn:hover {
+  border-color: #fc8181;
+  color: #e53e3e;
+  transform: scale(1.1);
+}
+
+.favorite-btn.favorited {
+  border-color: #e53e3e;
+  background: #fed7d7;
+  color: #e53e3e;
+}
+
+/* Clinic Meta Information */
+.clinic-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.clinic-meta span {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #4a5568;
+  font-size: 0.9rem;
+}
+
+.address {
+  font-weight: 500;
+}
+
+.rating {
+  align-items: center !important;
+}
+
+.status span:last-child {
+  font-weight: 600;
+}
+
+/* Contact Information */
+.clinic-contact {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 2rem;
+  padding: 1rem;
+  background: #f7fafc;
+  border-radius: 12px;
+  border-left: 4px solid #667eea;
+}
+
+.contact-item {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.9rem;
+}
+
+.contact-label {
+  font-weight: 600;
+  color: #4a5568;
+  min-width: 80px;
+}
+
+.contact-value {
+  color: #2d3748;
+}
+
+.contact-link {
+  color: #667eea;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.contact-link:hover {
+  text-decoration: underline;
+}
+
+/* Quick Actions */
+.quick-actions {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.action-btn {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 120px;
+}
+
+.action-btn:hover {
+  transform: translateY(-2px);
+}
+
+.action-btn.primary {
+  background: linear-gradient(45deg, #48bb78, #38a169);
+  color: white;
+  box-shadow: 0 4px 12px rgba(72, 187, 120, 0.3);
+}
+
+.action-btn.primary:hover {
+  box-shadow: 0 6px 20px rgba(72, 187, 120, 0.4);
+}
+
+.action-btn.secondary {
+  background: linear-gradient(45deg, #667eea, #764ba2);
+  color: white;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.action-btn.secondary:hover {
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+.action-btn.tertiary {
+  background: linear-gradient(45deg, #ed8936, #dd6b20);
+  color: white;
+  box-shadow: 0 4px 12px rgba(237, 137, 54, 0.3);
+}
+
+.action-btn.tertiary:hover {
+  box-shadow: 0 6px 20px rgba(237, 137, 54, 0.4);
+}
+
+/* Reviews Section */
+.reviews-section {
+  margin: 2rem;
+  background: white;
+  border-radius: 24px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.reviews-container {
+  padding: 2rem;
+}
+
+.reviews-container h3 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #2d3748;
+  margin-bottom: 2rem;
+}
+
+/* Add Review Form */
+.add-review {
+  background: #f7fafc;
+  padding: 2rem;
+  border-radius: 16px;
+  margin-bottom: 2rem;
+  border: 1px solid #e2e8f0;
+}
+
+.add-review h4 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #2d3748;
+  margin-bottom: 1rem;
+}
+
+.rating-input {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.star-btn {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  filter: grayscale(1);
+}
+
+.star-btn.active {
+  filter: grayscale(0);
+  transform: scale(1.1);
+}
+
+.star-btn:hover {
+  transform: scale(1.2);
+}
+
+.review-textarea {
+  width: 100%;
+  min-height: 100px;
+  padding: 1rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  font-family: inherit;
+  font-size: 0.9rem;
+  resize: vertical;
+  margin-bottom: 1rem;
+  transition: border-color 0.2s ease;
+}
+
+.review-textarea:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.submit-review-btn {
+  background: linear-gradient(45deg, #667eea, #764ba2);
+  color: white;
+  border: none;
+  padding: 0.75rem 2rem;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.submit-review-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+.submit-review-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Reviews List */
+.reviews-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.review-item {
+  background: #f7fafc;
+  border-radius: 16px;
+  padding: 1.5rem;
+  border: 1px solid #e2e8f0;
+  transition: all 0.2s ease;
+}
+
+.review-item:hover {
+  border-color: #cbd5e0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.review-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.reviewer-name {
+  font-weight: 600;
+  color: #2d3748;
+}
+
+.review-rating {
+  display: flex;
+  align-items: center;
+}
+
+.review-date {
+  color: #718096;
+  font-size: 0.85rem;
+  margin-left: auto;
+}
+
+.review-comment {
+  color: #4a5568;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.review-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e2e8f0;
+}
+
+.review-actions button {
+  background: none;
+  border: none;
+  color: #667eea;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.review-actions button:hover {
+  background: rgba(102, 126, 234, 0.1);
+}
+
+.no-reviews {
+  text-align: center;
+  color: #718096;
+  font-style: italic;
+  padding: 2rem;
+  background: #f7fafc;
+  border-radius: 12px;
+  border: 2px dashed #e2e8f0;
+}
+
+.show-more-reviews {
+  background: none;
+  border: 2px solid #667eea;
+  color: #667eea;
+  padding: 0.75rem 2rem;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 600;
+  margin-top: 1rem;
+  transition: all 0.2s ease;
+  width: 100%;
+}
+
+.show-more-reviews:hover {
+  background: #667eea;
+  color: white;
+  transform: translateY(-2px);
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .hero-content {
+    grid-template-columns: 1fr;
+  }
+  
+  .clinic-images {
+    order: 1;
+  }
+  
+  .clinic-basic-info {
+    order: 2;
+  }
+  
+  .main-image {
+    height: 300px;
+  }
+}
+
+@media (max-width: 768px) {
+  .clinic-detail-page {
+    margin: 0;
+  }
+  
+  .clinic-hero,
+  .reviews-section {
+    margin: 1rem;
+    border-radius: 16px;
+  }
+  
+  .clinic-basic-info,
+  .reviews-container {
+    padding: 1.5rem;
+  }
+  
+  .clinic-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  
+  .header-actions {
+    align-self: flex-end;
+  }
+  
+  .quick-actions {
+    flex-direction: column;
+  }
+  
+  .action-btn {
+    width: 100%;
+  }
+  
+  .image-nav {
+    width: 40px;
+    height: 40px;
+    font-size: 1rem;
+  }
+  
+  .image-nav.prev {
+    left: 0.5rem;
+  }
+  
+  .image-nav.next {
+    right: 0.5rem;
+  }
+  
+  .add-review {
+    padding: 1.5rem;
+  }
+  
+  .review-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  
+  .review-date {
+    margin-left: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .clinic-hero,
+  .reviews-section {
+    margin: 0.5rem;
+    border-radius: 12px;
+  }
+  
+  .clinic-basic-info,
+  .reviews-container {
+    padding: 1rem;
+  }
+  
+  .clinic-header h1 {
+    font-size: 1.5rem;
+  }
+  
+  .main-image {
+    height: 250px;
+  }
+  
+  .add-review {
+    padding: 1rem;
+  }
+  
+  .contact-item {
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+  
+  .contact-label {
+    min-width: auto;
+    font-size: 0.8rem;
+  }
+}
+
+/* Animation Keyframes */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Focus and Accessibility */
+.action-btn:focus,
+.favorite-btn:focus,
+.submit-review-btn:focus,
+.show-more-reviews:focus {
+  outline: 2px solid #667eea;
+  outline-offset: 2px;
+}
+
+.star-btn:focus {
+  outline: 2px solid #ffd700;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .clinic-hero,
+  .reviews-section {
+    border: 2px solid #000;
+  }
+  
+  .review-item {
+    border: 1px solid #000;
+  }
+  
+  .favorite-btn {
+    border-color: #000;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .clinic-detail-page {
+    background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+  }
+  
+  .clinic-hero,
+  .reviews-section,
+  .clinic-basic-info {
+    background: #2d3748;
+    color: #e2e8f0;
+  }
+  
+  .clinic-header h1 {
+    color: #e2e8f0;
+  }
+  
+  .clinic-contact {
+    background: #4a5568;
+  }
+  
+  .review-item,
+  .add-review {
+    background: #4a5568;
+    border-color: #718096;
+  }
+  
+  .review-textarea {
+    background: #2d3748;
+    color: #e2e8f0;
+    border-color: #718096;
+  }
+  
+  .no-reviews {
+    background: #4a5568;
+    border-color: #718096;
+    color: #a0aec0;
+  }
+}
