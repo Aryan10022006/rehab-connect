@@ -16,6 +16,8 @@ import ClinicDetailPage from "./pages/ClinicDetailPage";
 import AdminPanel from "./pages/AdminPanel";
 import ContactPage from "./pages/ContactPage";
 import PricingPage from "./pages/PricingPage";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsOfService from "./pages/TermsOfService";
 
 // Protected route component for authenticated users - NO DOUBLE SIGN IN
 function ProtectedRoute({ children }) {
@@ -85,6 +87,20 @@ function AppContent() {
             <Header />
             <PricingPage />
           </ErrorBoundary>
+        } />
+        
+        <Route path="/privacy" element={
+          <>
+            <Header />
+            <PrivacyPolicy />
+          </>
+        } />
+        
+        <Route path="/terms" element={
+          <>
+            <Header />
+            <TermsOfService />
+          </>
         } />
         
         {/* Main app - clinic browsing - PROTECTED: Only authenticated users */}

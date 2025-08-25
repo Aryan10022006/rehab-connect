@@ -44,7 +44,7 @@ const Footer = () => {
             </div>
           </div>          {/* Quick Links */}
           <div className="space-y-4">
-            <h4 className="text-lg font-semibold text-white">Quick Links</h4>
+            <h4 className="text-lg font-semibold text-white">Platform</h4>
             <div className="space-y-2">
               <Link to="/clinics" className="block text-gray-300 hover:text-blue-400 text-sm transition-colors">
                 Find Clinics
@@ -61,6 +61,17 @@ const Footer = () => {
             </div>
           </div>
 
+          {/* Services */}
+          <div className="space-y-4">
+            <h4 className="text-lg font-semibold text-white">Services</h4>
+            <div className="space-y-2">
+              <span className="block text-gray-300 text-sm">Clinic Directory</span>
+              <span className="block text-gray-300 text-sm">Healthcare Matching</span>
+              <span className="block text-gray-300 text-sm">Premium Analytics</span>
+              <span className="block text-gray-300 text-sm">Enterprise Solutions</span>
+            </div>
+          </div>
+
           {/* Contact Info */}
           <div className="space-y-4">
             <h4 className="text-lg font-semibold text-white">Contact</h4>
@@ -71,11 +82,11 @@ const Footer = () => {
               </div>
               <div className="flex items-center space-x-3 text-sm">
                 <FaEnvelope className="text-blue-400 flex-shrink-0" />
-                <span className="text-gray-300">contact@robobionics.com</span>
+                <span className="text-gray-300">support@robobionics.com</span>
               </div>
               <div className="flex items-center space-x-3 text-sm">
                 <FaMapMarkerAlt className="text-blue-400 flex-shrink-0" />
-                <span className="text-gray-300">Mumbai, India</span>
+                <span className="text-gray-300">Gurugram, India</span>
               </div>
             </div>
           </div>

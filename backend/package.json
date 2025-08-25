@@ -1,8 +1,22 @@
 {
   "name": "rehab-connect-backend",
   "version": "2.0.0",
-  "description": "Production-ready Backend API for Rehab Connect platform",
+  "description": "Professional healthcare clinic discovery API by RoboBionics - Secure, scalable backend for rehabilitation services",
   "main": "server.js",
+  "author": {
+    "name": "RoboBionics Pvt. Ltd.",
+    "email": "support@robobionics.com",
+    "url": "https://robobionics.com"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/robobionics/rehab-connect"
+  },
+  "bugs": {
+    "url": "https://github.com/robobionics/rehab-connect/issues",
+    "email": "support@robobionics.com"
+  },
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
@@ -38,15 +52,21 @@
     "supertest": "^6.3.3"
   },
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
   },
   "keywords": [
     "healthcare",
-    "clinics",
     "rehabilitation",
-    "api",
+    "clinic-finder",
+    "medical-api",
     "firebase",
     "stripe",
-    "nodejs"
+    "razorpay",
+    "nodejs",
+    "express",
+    "professional",
+    "robobionics",
+    "enterprise"
   ]
 }

@@ -49,7 +49,7 @@ const HomePage = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const isPremium = RazorpayService.hasActivePremium();
-  const freeLimit = 3;
+  const freeLimit = 2;
 
   // CLEAN STATE MANAGEMENT - NO LAG
   const [state, setState] = useState({
@@ -719,12 +719,21 @@ const HomePage = () => {
                         />
                       ))}
 
-                      {/* Blurred Premium Clinics */}
+                      {/* Blurred Premium Clinics - Actual Cards */}
+                      {blurredClinics.map((clinic) => (
+                        <BlurredClinicCard
+                          key={`blurred-${clinic.id}`}
+                          clinic={clinic}
+                          onUpgrade={() => setShowPremiumModal(true)}
+                        />
+                      ))}
+
+                      {/* Premium Upsell Message */}
                       {blurredClinics.length > 0 && (
                         <div className="text-center py-3 border-t border-gray-200">
                           <FaLock className="text-gray-400 text-lg mx-auto mb-2" />
                           <p className="text-sm text-gray-600 mb-2">
-                            {blurredClinics.length} more clinics available
+                            {blurredClinics.length} more clinics available with Premium
                           </p>
                           <button
                             onClick={() => setShowPremiumModal(true)}
@@ -766,6 +775,15 @@ const HomePage = () => {
                     isFavorite={favorites.includes(clinic.id)}
                     onFavorite={() => toggleFavorite(clinic.id)}
                     showFavoriteButton={!!user}
+                  />
+                ))}
+
+                {/* Blurred Premium Clinics - Actual Cards */}
+                {blurredClinics.map((clinic) => (
+                  <BlurredClinicCard
+                    key={`blurred-${clinic.id}`}
+                    clinic={clinic}
+                    onUpgrade={() => setShowPremiumModal(true)}
                   />
                 ))}
 
@@ -906,6 +924,69 @@ const SimpleClinicCard = ({
           {/* Status */}
           {clinic.status && (
             <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(clinic.status)}`}>
+              {clinic.status}
+            </span>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Blurred clinic card component for premium upsell
+const BlurredClinicCard = ({ clinic, onUpgrade }) => {
+  return (
+    <div 
+      onClick={onUpgrade}
+      className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md hover:border-blue-300 transition-all cursor-pointer group relative overflow-hidden"
+    >
+      {/* Blur overlay */}
+      <div className="absolute inset-0 bg-white/70 backdrop-blur-sm z-10 flex items-center justify-center">
+        <div className="text-center">
+          <FaLock className="text-blue-500 text-2xl mx-auto mb-2" />
+          <p className="text-sm font-semibold text-gray-700 mb-1">Premium Content</p>
+          <p className="text-xs text-gray-500">Upgrade to view</p>
+        </div>
+      </div>
+      
+      {/* Blurred content */}
+      <div className="filter blur-sm">
+        <div className="flex justify-between items-start mb-3">
+          <h3 className="text-lg font-semibold text-gray-900">
+            {clinic.name}
+          </h3>
+          {clinic.verified && (
+            <FaCheckCircle className="text-green-500 flex-shrink-0 ml-2" />
+          )}
+        </div>
+        
+        <p className="text-gray-600 text-sm mb-3 line-clamp-2">
+          {clinic.address}
+        </p>
+        
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            {/* Rating */}
+            {clinic.rating && (
+              <div className="flex items-center gap-1">
+                <FaStar className="text-yellow-400 text-sm" />
+                <span className="text-sm font-medium text-gray-700">
+                  {clinic.rating.toFixed(1)}
+                </span>
+              </div>
+            )}
+            
+            {/* Distance */}
+            {clinic.distance && (
+              <span className="text-sm text-gray-500">
+                {formatDistance(clinic.distance)} away
+              </span>
+            )}
+          </div>
+          
+          {/* Status */}
+          {clinic.status && (
+            <span className="px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
               {clinic.status}
             </span>
           )}

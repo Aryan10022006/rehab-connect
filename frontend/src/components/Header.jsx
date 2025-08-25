@@ -150,6 +150,9 @@ const Header = () => {
               <NavLink to="/clinics" icon={FaHospital}>
                 Find Clinics
               </NavLink>
+              <NavLink to="/pricing" icon={FaCrown}>
+                Pricing
+              </NavLink>
               <NavLink to="/contact" icon={FaPhone}>
                 Contact
               </NavLink>
@@ -293,6 +296,9 @@ const Header = () => {
               </NavLink>
               <NavLink to="/clinics" icon={FaHospital} mobile onClick={() => setMobileMenuOpen(false)}>
                 Find Clinics
+              </NavLink>
+              <NavLink to="/pricing" icon={FaCrown} mobile onClick={() => setMobileMenuOpen(false)}>
+                Pricing
               </NavLink>
               <NavLink to="/contact" icon={FaPhone} mobile onClick={() => setMobileMenuOpen(false)}>
                 Contact

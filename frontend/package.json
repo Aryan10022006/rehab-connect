@@ -1,7 +1,23 @@
 {
-  "name": "rehab-connect",
+  "name": "rehab-connect-frontend",
   "version": "2.0.0",
+  "description": "Professional healthcare clinic discovery platform by RoboBionics",
   "private": true,
+  "homepage": "https://rehab-connect.vercel.app",
+  "keywords": [
+    "healthcare",
+    "rehabilitation",
+    "clinic-finder",
+    "medical",
+    "robobionics",
+    "professional"
+  ],
+  "author": {
+    "name": "RoboBionics Pvt. Ltd.",
+    "email": "support@robobionics.com",
+    "url": "https://robobionics.com"
+  },
+  "license": "MIT",
   "dependencies": {
     "@headlessui/react": "^2.2.4",
     "@react-oauth/google": "^0.12.2",

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaClinicMedical, FaUserMd, FaMapMarkerAlt, FaShieldAlt, FaStar, FaArrowRight, FaCheck, FaBars, FaTimes } from 'react-icons/fa';
+import { FaUserMd, FaMapMarkerAlt, FaShieldAlt, FaStar, FaArrowRight, FaCheck, FaBars, FaTimes, FaCrown, FaUser, FaPhone, FaFilter } from 'react-icons/fa';
 
 const LandingPage = () => {
   const navigate = useNavigate();
@@ -179,6 +179,121 @@ const LandingPage = () => {
                 <p className="text-gray-600">{feature.description}</p>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Premium Features Section */}
+      <section className="py-20 bg-gradient-to-r from-gray-50 to-blue-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">
+              <FaCrown className="inline-block text-yellow-500 mr-3" />
+              Premium Access
+            </h2>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+              Unlock unlimited clinic access and premium features with our professional plans
+            </p>
+          </div>
+          
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            {/* Free vs Premium */}
+            <div className="space-y-8">
+              <div className="bg-white p-8 rounded-xl shadow-lg border">
+                <h3 className="text-2xl font-bold text-gray-900 mb-6 flex items-center">
+                  <FaUser className="text-gray-500 mr-3" />
+                  Free Access
+                </h3>
+                <ul className="space-y-4">
+                  <li className="flex items-center">
+                    <FaCheck className="text-green-500 mr-3" />
+                    <span>View up to 2 clinics per search</span>
+                  </li>
+                  <li className="flex items-center">
+                    <FaTimes className="text-red-500 mr-3" />
+                    <span className="text-gray-500">Additional results blurred</span>
+                  </li>
+                  <li className="flex items-center">
+                    <FaTimes className="text-red-500 mr-3" />
+                    <span className="text-gray-500">Limited contact information</span>
+                  </li>
+                  <li className="flex items-center">
+                    <FaTimes className="text-red-500 mr-3" />
+                    <span className="text-gray-500">Basic search filters</span>
+                  </li>
+                </ul>
+              </div>
+              
+              <div className="bg-gradient-to-r from-blue-600 to-blue-800 p-8 rounded-xl shadow-lg text-white">
+                <h3 className="text-2xl font-bold mb-6 flex items-center">
+                  <FaCrown className="text-yellow-400 mr-3" />
+                  Premium Access
+                </h3>
+                <ul className="space-y-4">
+                  <li className="flex items-center">
+                    <FaCheck className="text-green-400 mr-3" />
+                    <span>Unlimited clinic access</span>
+                  </li>
+                  <li className="flex items-center">
+                    <FaCheck className="text-green-400 mr-3" />
+                    <span>Complete contact details</span>
+                  </li>
+                  <li className="flex items-center">
+                    <FaCheck className="text-green-400 mr-3" />
+                    <span>Advanced search filters</span>
+                  </li>
+                  <li className="flex items-center">
+                    <FaCheck className="text-green-400 mr-3" />
+                    <span>Priority customer support</span>
+                  </li>
+                  <li className="flex items-center">
+                    <FaCheck className="text-green-400 mr-3" />
+                    <span>Save favorite clinics</span>
+                  </li>
+                </ul>
+                <button className="mt-6 bg-yellow-500 text-blue-900 px-8 py-3 rounded-lg font-bold hover:bg-yellow-400 transition transform hover:scale-105">
+                  Upgrade to Premium
+                </button>
+              </div>
+            </div>
+            
+            {/* Premium Benefits */}
+            <div className="space-y-6">
+              <div className="text-center lg:text-left">
+                <h3 className="text-3xl font-bold text-gray-900 mb-4">
+                  Unlock Full Potential
+                </h3>
+                <p className="text-lg text-gray-600 mb-8">
+                  Get unlimited access to our complete database of rehabilitation clinics and premium features designed for healthcare professionals and frequent users.
+                </p>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="bg-white p-6 rounded-lg shadow border-l-4 border-blue-500">
+                  <FaMapMarkerAlt className="text-blue-500 text-2xl mb-3" />
+                  <h4 className="font-semibold mb-2">Unlimited Search</h4>
+                  <p className="text-gray-600 text-sm">Access all clinics in your area without restrictions</p>
+                </div>
+                
+                <div className="bg-white p-6 rounded-lg shadow border-l-4 border-green-500">
+                  <FaPhone className="text-green-500 text-2xl mb-3" />
+                  <h4 className="font-semibold mb-2">Direct Contact</h4>
+                  <p className="text-gray-600 text-sm">Get complete contact information instantly</p>
+                </div>
+                
+                <div className="bg-white p-6 rounded-lg shadow border-l-4 border-purple-500">
+                  <FaFilter className="text-purple-500 text-2xl mb-3" />
+                  <h4 className="font-semibold mb-2">Advanced Filters</h4>
+                  <p className="text-gray-600 text-sm">Filter by specialties, ratings, and availability</p>
+                </div>
+                
+                <div className="bg-white p-6 rounded-lg shadow border-l-4 border-yellow-500">
+                  <FaCrown className="text-yellow-500 text-2xl mb-3" />
+                  <h4 className="font-semibold mb-2">VIP Support</h4>
+                  <p className="text-gray-600 text-sm">Priority customer service and assistance</p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
